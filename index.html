@@ -1,9 +1,9 @@
-<!DOCTYPEYPE html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>EventTrader — События + Компании</title>
+<title>EventTrader — События + Компании + Графики</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
@@ -60,23 +60,25 @@
     padding: 10px 12px;
     background: #0d1420;
     border-radius: 8px;
+    gap: 10px;
   }
-  .signal-left { display: flex; flex-direction: column; gap: 2px; }
+  .signal-left { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
   .signal-asset { font-size: 13px; font-weight: 500; }
   .signal-ticker { font-size: 10px; color: #5a6a80; }
   .signal-reason { font-size: 10px; color: #7d8da6; margin-top: 2px; }
-  .signal-prob { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; }
+  .signal-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .signal-prob { display: flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; }
   .up { color: #4ade80; }
   .down { color: #f87171; }
   .neutral { color: #94a3b8; }
   .garch-badge {
-    font-size: 10px;
+    font-size: 9px;
     color: #60a5fa;
     background: #1e3a5f;
-    padding: 2px 6px;
+    padding: 2px 5px;
     border-radius: 4px;
-    margin-left: 8px;
   }
+  .sparkline { display: block; }
   .footer { text-align: center; padding: 24px 16px; font-size: 11px; color: #4a5568; line-height: 1.6; }
   .loading { text-align: center; padding: 40px 16px; color: #7d8da6; font-size: 14px; }
 </style>
@@ -85,7 +87,7 @@
 
 <div class="header">
   <h1>Event<span>Trader</span></h1>
-  <p>События + конкретные компании</p>
+  <p>События + компании + графики тренда</p>
 </div>
 
 <div class="container" id="events-container">
@@ -94,8 +96,9 @@
 
 <div class="footer">
   Данные: GDACS + база компаний.<br>
+  Графики — демонстрационные.<br>
   Не является инвестиционной рекомендацией.<br>
-  EventTrader v0.6
+  EventTrader v0.7
 </div>
 
 <script>
@@ -113,34 +116,12 @@ const EVENT_ASSET_MAP = {
 };
 
 const DIRECTION_RULES = {
-  "EQ": {
-    "gold": { dir: "up", baseProb: 70 },
-    "jpy": { dir: "up", baseProb: 62 },
-    "auto": { dir: "down", baseProb: 58 }
-  },
-  "TC": {
-    "oil": { dir: "up", baseProb: 65 },
-    "gas": { dir: "up", baseProb: 55 },
-    "insurance": { dir: "down", baseProb: 60 }
-  },
-  "FL": {
-    "agri": { dir: "up", baseProb: 68 },
-    "logistics": { dir: "down", baseProb: 55 },
-    "semicon": { dir: "up", baseProb: 52 }
-  },
-  "VO": {
-    "airlines": { dir: "down", baseProb: 72 },
-    "gold": { dir: "up", baseProb: 48 }
-  },
-  "WF": {
-    "timber": { dir: "up", baseProb: 58 },
-    "agri": { dir: "up", baseProb: 45 }
-  },
-  "DR": {
-    "wheat": { dir: "up", baseProb: 64 },
-    "corn": { dir: "up", baseProb: 60 },
-    "cattle": { dir: "up", baseProb: 50 }
-  }
+  "EQ": { "gold": { dir: "up", baseProb: 70 }, "jpy": { dir: "up", baseProb: 62 }, "auto": { dir: "down", baseProb: 58 } },
+  "TC": { "oil": { dir: "up", baseProb: 65 }, "gas": { dir: "up", baseProb: 55 }, "insurance": { dir: "down", baseProb: 60 } },
+  "FL": { "agri": { dir: "up", baseProb: 68 }, "logistics": { dir: "down", baseProb: 55 }, "semicon": { dir: "up", baseProb: 52 } },
+  "VO": { "airlines": { dir: "down", baseProb: 72 }, "gold": { dir: "up", baseProb: 48 } },
+  "WF": { "timber": { dir: "up", baseProb: 58 }, "agri": { dir: "up", baseProb: 45 } },
+  "DR": { "wheat": { dir: "up", baseProb: 64 }, "corn": { dir: "up", baseProb: 60 }, "cattle": { dir: "up", baseProb: 50 } }
 };
 
 // ==========================================
@@ -179,23 +160,14 @@ const COMPANY_RULES = {
   ]
 };
 
-// ==========================================
-// ПОИСК КОМПАНИЙ
-// ==========================================
-
 function matchCompanies(eventType, description) {
   const rules = COMPANY_RULES[eventType];
   if (!rules) return [];
-  
   const desc = (description || "").toLowerCase();
   const matched = [];
-  
   rules.forEach(rule => {
-    if (desc.includes(rule.country)) {
-      matched.push(...rule.companies);
-    }
+    if (desc.includes(rule.country)) matched.push(...rule.companies);
   });
-  
   const seen = new Set();
   return matched.filter(c => {
     if (seen.has(c.ticker)) return false;
@@ -205,7 +177,7 @@ function matchCompanies(eventType, description) {
 }
 
 // ==========================================
-// GARCH (упрощённая заглушка для первой версии)
+// GARCH (упрощённая заглушка)
 // ==========================================
 
 function calcVolatility(assetKey) {
@@ -215,6 +187,78 @@ function calcVolatility(assetKey) {
     airlines: 2.5, timber: 1.9, wheat: 2.5, corn: 2.2, cattle: 1.9
   };
   return { movePercent: baseVol[assetKey] || 2.0 };
+}
+
+// ==========================================
+// ГРАФИК (SPARKLINE)
+// ==========================================
+
+// Генерируем исторические точки для графика
+function generateTrendPoints(dir, points = 20) {
+  const data = [];
+  let value = 50; // середина
+  for (let i = 0; i < points; i++) {
+    const trend = dir === "up" ? 0.8 : -0.8;
+    const noise = (Math.random() - 0.5) * 3;
+    value += trend + noise;
+    value = Math.max(10, Math.min(90, value)); // держим в пределах
+    data.push(value);
+  }
+  return data;
+}
+
+// Рисуем спарклайн на canvas
+function drawSparkline(canvas, data, dir) {
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const w = canvas.clientWidth;
+  const h = canvas.clientHeight;
+  
+  canvas.width = w * dpr;
+  canvas.height = h * dpr;
+  ctx.scale(dpr, dpr);
+  
+  const min = Math.min(...data);
+  const max = Math.max(...data);
+  const range = max - min || 1;
+  
+  const stepX = w / (data.length - 1);
+  const color = dir === "up" ? '#4ade80' : dir === "down" ? '#f87171' : '#94a3b8';
+  
+  // Линия
+  ctx.beginPath();
+  data.forEach((val, i) => {
+    const x = i * stepX;
+    const y = h - ((val - min) / range) * (h - 4) - 2;
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  });
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  
+  // Градиентная заливка под линией
+  ctx.lineTo(w, h);
+  ctx.lineTo(0, h);
+  ctx.closePath();
+  const grad = ctx.createLinearGradient(0, 0, 0, h);
+  grad.addColorStop(0, color + '40');
+  grad.addColorStop(1, color + '00');
+  ctx.fillStyle = grad;
+  ctx.fill();
+}
+
+// Создаём canvas-элемент
+function createSparkline(dir, width = 70, height = 28) {
+  const canvas = document.createElement('canvas');
+  canvas.className = 'sparkline';
+  canvas.style.width = width + 'px';
+  canvas.style.height = height + 'px';
+  const data = generateTrendPoints(dir);
+  
+  // Рисуем после добавления в DOM
+  requestAnimationFrame(() => drawSparkline(canvas, data, dir));
+  return canvas;
 }
 
 // ==========================================
@@ -241,28 +285,37 @@ function formatDate(d) {
   });
 }
 
-function getSeverity(event) {
-  if (event.severitydata) return event.severitydata.severity || 0;
-  return 0;
-}
-
 function renderSignal(assetName, ticker, dir, prob, reason, volPercent) {
   const arrow = dir === "up" ? "↑" : dir === "down" ? "↓" : "→";
   const cls = dir === "up" ? "up" : dir === "down" ? "down" : "neutral";
-  const dirText = dir === "up" ? "Рост" : dir === "down" ? "Падение" : "Нейтрально";
+  const dirText = dir === "up" ? "Рост" : dir === "down" ? "Падение" : "Нейтр.";
   
-  return `
-    <div class="signal">
-      <div class="signal-left">
-        <span class="signal-asset">${assetName}${ticker && ticker !== "—" ? `<span class="signal-ticker"> ${ticker}</span>` : ""}</span>
-        ${reason ? `<span class="signal-reason">${reason}</span>` : ""}
-      </div>
-      <span class="signal-prob ${cls}">
-        ${arrow} ${dirText} ${Math.round(prob)}%
-        ${volPercent ? `<span class="garch-badge">±${volPercent}%</span>` : ""}
-      </span>
-    </div>
+  const signal = document.createElement('div');
+  signal.className = 'signal';
+  
+  const left = document.createElement('div');
+  left.className = 'signal-left';
+  left.innerHTML = `
+    <span class="signal-asset">${assetName}${ticker && ticker !== "—" ? `<span class="signal-ticker"> ${ticker}</span>` : ""}</span>
+    ${reason ? `<span class="signal-reason">${reason}</span>` : ""}
   `;
+  
+  const right = document.createElement('div');
+  right.className = 'signal-right';
+  
+  // График
+  const sparkline = createSparkline(dir);
+  right.appendChild(sparkline);
+  
+  // Текст
+  const probEl = document.createElement('span');
+  probEl.className = `signal-prob ${cls}`;
+  probEl.innerHTML = `${arrow} ${dirText} ${Math.round(prob)}%${volPercent ? `<span class="garch-badge">±${volPercent}%</span>` : ""}`;
+  right.appendChild(probEl);
+  
+  signal.appendChild(left);
+  signal.appendChild(right);
+  return signal;
 }
 
 function renderCard(event) {
@@ -278,85 +331,103 @@ function renderCard(event) {
   desc = desc.replace(/<[^>]*>/g, "");
   if (desc.length > 250) desc = desc.substring(0, 250) + "...";
   
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.innerHTML = `
+    <div class="card-header">
+      <div>
+        <div class="event-type">${typeName}</div>
+        <div class="event-title">${title}</div>
+      </div>
+      <span class="severity ${alertInfo.cls}">${alertInfo.label}</span>
+    </div>
+    <div class="event-desc">
+      ${desc || "Описание недоступно."}
+      <br><small style="color:#5a6a80">${country ? country + " • " : ""}${date}</small>
+    </div>
+    <div class="signals"></div>
+  `;
+  
+  const signalsContainer = card.querySelector('.signals');
+  
+  // Общие активы
   const assets = EVENT_ASSET_MAP[type] || {};
   const rules = DIRECTION_RULES[type] || {};
-  let signalsHtml = "";
-  
   Object.keys(assets).forEach(assetKey => {
     const assetName = assets[assetKey];
     const rule = rules[assetKey] || { dir: "down", baseProb: 40 };
     const vol = calcVolatility(assetKey);
     const volPercent = vol.movePercent.toFixed(1);
-    const volBoost = Math.min(vol.movePercent * 2, 15);
-    const finalProb = Math.min(rule.baseProb + volBoost, 95);
-    
-    signalsHtml += renderSignal(assetName, null, rule.dir, finalProb, null, volPercent);
+    const finalProb = Math.min(rule.baseProb + Math.min(vol.movePercent * 2, 15), 95);
+    signalsContainer.appendChild(renderSignal(assetName, null, rule.dir, finalProb, null, volPercent));
   });
   
+  // Конкретные компании
   const companies = matchCompanies(type, desc + " " + country);
-  let companiesHtml = "";
-  
   if (companies.length > 0) {
-    companiesHtml = '<div class="section-title" style="margin-top:14px;margin-bottom:8px">Конкретные компании</div>';
+    const titleEl = document.createElement('div');
+    titleEl.className = 'section-title';
+    titleEl.style.marginTop = '14px';
+    titleEl.style.marginBottom = '8px';
+    titleEl.textContent = 'Конкретные компании';
+    signalsContainer.appendChild(titleEl);
+    
     companies.forEach(c => {
-      companiesHtml += renderSignal(c.name, c.ticker, c.dir, c.prob, c.reason, null);
+      signalsContainer.appendChild(renderSignal(c.name, c.ticker, c.dir, c.prob, c.reason, null));
     });
   }
   
-  return `
-    <div class="card">
-      <div class="card-header">
-        <div>
-          <div class="event-type">${typeName}</div>
-          <div class="event-title">${title}</div>
-        </div>
-        <span class="severity ${alertInfo.cls}">${alertInfo.label}</span>
-      </div>
-      <div class="event-desc">
-        ${desc || "Описание недоступно."}
-        <br><small style="color:#5a6a80">${country ? country + " • " : ""}${date}</small>
-      </div>
-      <div class="signals">${signalsHtml}</div>
-      ${companiesHtml}
-    </div>
-  `;
+  return card;
 }
 
+// Демо-события на случай недоступности GDACS
+const FALLBACK_EVENTS = [
+  {
+    eventtype: "FL", name: "Наводнение в Индии", alertlevel: "Red",
+    description: "Масштабные наводнения в промышленных регионах.", country: "India"
+  },
+  {
+    eventtype: "EQ", name: "Землетрясение M6.8 — Япония", alertlevel: "Red",
+    description: "Сильное землетрясение у восточного побережья.", country: "Japan"
+  }
+];
+
 async function loadEvents() {
+  let eventsToShow = [];
+  let dataSource = 'GDACS';
+
   try {
     const today = new Date();
     const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
     const from = yesterday.toISOString().split("T")[0];
     const to = today.toISOString().split("T")[0];
-    
     const url = `https://www.gdacs.org/gdacsapi/api/events/geteventlist/SEARCH?eventlist=EQ;TC;FL;VO;WF;DR&fromdate=${from}&todate=${to}`;
-    
+
     const response = await fetch(url);
+    if (!response.ok) throw new Error(`GDACS вернул статус ${response.status}`);
+    
     const data = await response.json();
-    
-    if (!data.features || data.features.length === 0) {
-      container.innerHTML = '<div class="loading">За последние 24 часа событий не найдено.</div>';
-      return;
+    if (data.features && Array.isArray(data.features) && data.features.length > 0) {
+      eventsToShow = data.features.map(ev => ev.properties || ev);
+    } else {
+      throw new Error("GDACS вернул пустой список событий");
     }
-    
-    const events = data.features.slice(0, 10);
-    
-    let html = '<div class="section-title">События за 24 часа</div>';
-    events.forEach(ev => {
-      html += renderCard(ev.properties || ev);
-    });
-    
-    container.innerHTML = html;
-    
   } catch (e) {
-    console.error("Ошибка:", e);
-    container.innerHTML = `
-      <div class="loading">
-        Не удалось загрузить данные.<br>
-        <small>Ошибка: ${e.message}</small>
-      </div>
-    `;
+    console.warn("GDACS недоступен, показываю резервные данные:", e.message);
+    dataSource = 'Резервные данные';
+    eventsToShow = FALLBACK_EVENTS;
   }
+
+  container.innerHTML = '';
+  
+  const titleEl = document.createElement('div');
+  titleEl.className = 'section-title';
+  titleEl.textContent = `События за 24 часа (${dataSource})`;
+  container.appendChild(titleEl);
+  
+  eventsToShow.slice(0, 10).forEach(ev => {
+    container.appendChild(renderCard(ev));
+  });
 }
 
 loadEvents();
