@@ -1,0 +1,366 @@
+<!DOCTYPEYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EventTrader — События + Компании</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #0a0e17;
+    color: #e6edf3;
+    min-height: 100vh;
+  }
+  .header {
+    background: linear-gradient(135deg, #1a2332 0%, #0d1420 100%);
+    padding: 20px;
+    border-bottom: 1px solid #1f2a3a;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .header h1 { font-size: 20px; font-weight: 600; letter-spacing: -0.5px; }
+  .header h1 span { color: #4ade80; }
+  .header p { font-size: 12px; color: #7d8da6; margin-top: 4px; }
+  .container { padding: 16px; }
+  .section-title {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: #5a6a80;
+    margin-bottom: 12px;
+    font-weight: 600;
+  }
+  .card {
+    background: #111827;
+    border: 1px solid #1f2a3a;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+  }
+  .event-type { font-size: 11px; color: #7d8da6; text-transform: uppercase; letter-spacing: 1px; }
+  .severity { font-size: 10px; padding: 3px 8px; border-radius: 20px; font-weight: 600; }
+  .sev-red { background: #7f1d1d; color: #fca5a5; }
+  .sev-orange { background: #78350f; color: #fcd34d; }
+  .sev-green { background: #14532d; color: #86efac; }
+  .event-title { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
+  .event-desc { font-size: 13px; color: #8b9bb4; line-height: 1.5; margin-bottom: 14px; }
+  .signals { display: flex; flex-direction: column; gap: 8px; }
+  .signal {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 12px;
+    background: #0d1420;
+    border-radius: 8px;
+  }
+  .signal-left { display: flex; flex-direction: column; gap: 2px; }
+  .signal-asset { font-size: 13px; font-weight: 500; }
+  .signal-ticker { font-size: 10px; color: #5a6a80; }
+  .signal-reason { font-size: 10px; color: #7d8da6; margin-top: 2px; }
+  .signal-prob { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; }
+  .up { color: #4ade80; }
+  .down { color: #f87171; }
+  .neutral { color: #94a3b8; }
+  .garch-badge {
+    font-size: 10px;
+    color: #60a5fa;
+    background: #1e3a5f;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-left: 8px;
+  }
+  .footer { text-align: center; padding: 24px 16px; font-size: 11px; color: #4a5568; line-height: 1.6; }
+  .loading { text-align: center; padding: 40px 16px; color: #7d8da6; font-size: 14px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Event<span>Trader</span></h1>
+  <p>События + конкретные компании</p>
+</div>
+
+<div class="container" id="events-container">
+  <div class="loading">Загружаю события...</div>
+</div>
+
+<div class="footer">
+  Данные: GDACS + база компаний.<br>
+  Не является инвестиционной рекомендацией.<br>
+  EventTrader v0.6
+</div>
+
+<script>
+// ==========================================
+// СЛОЙ 1: ОБЩИЕ АКТИВЫ
+// ==========================================
+
+const EVENT_ASSET_MAP = {
+  "EQ": { "gold": "Золото (XAU/USD)", "jpy": "JPY (Японская йена)", "auto": "Автопром (сектор)" },
+  "TC": { "oil": "Нефть (Brent)", "gas": "Природный газ", "insurance": "Страхование (сектор)" },
+  "FL": { "agri": "Сельхоз. товары", "logistics": "Логистика (сектор)", "semicon": "Полупроводники" },
+  "VO": { "airlines": "Авиаперевозки (сектор)", "gold": "Золото" },
+  "WF": { "timber": "Древесина", "agri": "Сельхоз. товары" },
+  "DR": { "wheat": "Пшеница", "corn": "Кукуруза", "cattle": "Скот (говядина)" }
+};
+
+const DIRECTION_RULES = {
+  "EQ": {
+    "gold": { dir: "up", baseProb: 70 },
+    "jpy": { dir: "up", baseProb: 62 },
+    "auto": { dir: "down", baseProb: 58 }
+  },
+  "TC": {
+    "oil": { dir: "up", baseProb: 65 },
+    "gas": { dir: "up", baseProb: 55 },
+    "insurance": { dir: "down", baseProb: 60 }
+  },
+  "FL": {
+    "agri": { dir: "up", baseProb: 68 },
+    "logistics": { dir: "down", baseProb: 55 },
+    "semicon": { dir: "up", baseProb: 52 }
+  },
+  "VO": {
+    "airlines": { dir: "down", baseProb: 72 },
+    "gold": { dir: "up", baseProb: 48 }
+  },
+  "WF": {
+    "timber": { dir: "up", baseProb: 58 },
+    "agri": { dir: "up", baseProb: 45 }
+  },
+  "DR": {
+    "wheat": { dir: "up", baseProb: 64 },
+    "corn": { dir: "up", baseProb: 60 },
+    "cattle": { dir: "up", baseProb: 50 }
+  }
+};
+
+// ==========================================
+// СЛОЙ 2: КОНКРЕТНЫЕ КОМПАНИИ
+// ==========================================
+
+const COMPANY_RULES = {
+  "FL": [
+    {
+      country: "india",
+      companies: [
+        { name: "Supreme Petrochem", ticker: "SPLPETRO.NS", dir: "down", prob: 78, reason: "Завод в Ченнаи остановлен из-за наводнения" },
+        { name: "Saraswati Sugar Mill", ticker: "—", dir: "down", prob: 65, reason: "Уничтожено сахара на ₹6 млрд" },
+        { name: "Punjab State Power Corp", ticker: "PSPCL", dir: "down", prob: 60, reason: "Ущерб ₹10,3 млрд, разрушены сети" }
+      ]
+    }
+  ],
+  "EQ": [
+    {
+      country: "japan",
+      companies: [
+        { name: "Mitsui Kinzoku", ticker: "5706.T", dir: "down", prob: 75, reason: "Завод в Хатинохе повреждён" },
+        { name: "Kioxia", ticker: "285A.T", dir: "down", prob: 70, reason: "Завод в Иватэ приостановил NAND" },
+        { name: "Tokyo Electron", ticker: "8035.T", dir: "up", prob: 55, reason: "Заводы не пострадали, конкуренты — да" }
+      ]
+    }
+  ],
+  "TC": [
+    {
+      country: "usa",
+      companies: [
+        { name: "Quanta Services", ticker: "PWR", dir: "up", prob: 72, reason: "Спрос на восстановление электросетей" },
+        { name: "Energizer", ticker: "ENR", dir: "up", prob: 68, reason: "Ажиотаж на батарейки и фонари" }
+      ]
+    }
+  ]
+};
+
+// ==========================================
+// ПОИСК КОМПАНИЙ
+// ==========================================
+
+function matchCompanies(eventType, description) {
+  const rules = COMPANY_RULES[eventType];
+  if (!rules) return [];
+  
+  const desc = (description || "").toLowerCase();
+  const matched = [];
+  
+  rules.forEach(rule => {
+    if (desc.includes(rule.country)) {
+      matched.push(...rule.companies);
+    }
+  });
+  
+  const seen = new Set();
+  return matched.filter(c => {
+    if (seen.has(c.ticker)) return false;
+    seen.add(c.ticker);
+    return true;
+  });
+}
+
+// ==========================================
+// GARCH (упрощённая заглушка для первой версии)
+// ==========================================
+
+function calcVolatility(assetKey) {
+  const baseVol = {
+    gold: 1.5, jpy: 0.9, auto: 2.1, oil: 2.8, gas: 3.4,
+    insurance: 2.0, agri: 2.3, logistics: 1.8, semicon: 3.1,
+    airlines: 2.5, timber: 1.9, wheat: 2.5, corn: 2.2, cattle: 1.9
+  };
+  return { movePercent: baseVol[assetKey] || 2.0 };
+}
+
+// ==========================================
+// ТЕХНИЧЕСКАЯ ЧАСТЬ
+// ==========================================
+
+const container = document.getElementById("events-container");
+
+const typeNames = {
+  "EQ": "🌍 Землетрясение", "TC": "🌀 Циклон", "FL": "🌊 Наводнение",
+  "VO": "🌋 Вулкан", "WF": "🔥 Пожар", "DR": "☀️ Засуха"
+};
+
+const alertNames = {
+  "Red": { label: "Высокая", cls: "sev-red" },
+  "Orange": { label: "Средняя", cls: "sev-orange" },
+  "Green": { label: "Низкая", cls: "sev-green" }
+};
+
+function formatDate(d) {
+  if (!d) return "—";
+  return new Date(d).toLocaleString("ru-RU", {
+    day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit"
+  });
+}
+
+function getSeverity(event) {
+  if (event.severitydata) return event.severitydata.severity || 0;
+  return 0;
+}
+
+function renderSignal(assetName, ticker, dir, prob, reason, volPercent) {
+  const arrow = dir === "up" ? "↑" : dir === "down" ? "↓" : "→";
+  const cls = dir === "up" ? "up" : dir === "down" ? "down" : "neutral";
+  const dirText = dir === "up" ? "Рост" : dir === "down" ? "Падение" : "Нейтрально";
+  
+  return `
+    <div class="signal">
+      <div class="signal-left">
+        <span class="signal-asset">${assetName}${ticker && ticker !== "—" ? `<span class="signal-ticker"> ${ticker}</span>` : ""}</span>
+        ${reason ? `<span class="signal-reason">${reason}</span>` : ""}
+      </div>
+      <span class="signal-prob ${cls}">
+        ${arrow} ${dirText} ${Math.round(prob)}%
+        ${volPercent ? `<span class="garch-badge">±${volPercent}%</span>` : ""}
+      </span>
+    </div>
+  `;
+}
+
+function renderCard(event) {
+  const type = event.eventtype || "UNKNOWN";
+  const typeName = typeNames[type] || type;
+  const title = event.name || event.description || "Событие";
+  const alert = event.alertlevel || "Green";
+  const alertInfo = alertNames[alert] || alertNames.Green;
+  const country = event.country || "";
+  const date = formatDate(event.todate || event.fromdate);
+  
+  let desc = event.description || event.htmldescription || "";
+  desc = desc.replace(/<[^>]*>/g, "");
+  if (desc.length > 250) desc = desc.substring(0, 250) + "...";
+  
+  const assets = EVENT_ASSET_MAP[type] || {};
+  const rules = DIRECTION_RULES[type] || {};
+  let signalsHtml = "";
+  
+  Object.keys(assets).forEach(assetKey => {
+    const assetName = assets[assetKey];
+    const rule = rules[assetKey] || { dir: "down", baseProb: 40 };
+    const vol = calcVolatility(assetKey);
+    const volPercent = vol.movePercent.toFixed(1);
+    const volBoost = Math.min(vol.movePercent * 2, 15);
+    const finalProb = Math.min(rule.baseProb + volBoost, 95);
+    
+    signalsHtml += renderSignal(assetName, null, rule.dir, finalProb, null, volPercent);
+  });
+  
+  const companies = matchCompanies(type, desc + " " + country);
+  let companiesHtml = "";
+  
+  if (companies.length > 0) {
+    companiesHtml = '<div class="section-title" style="margin-top:14px;margin-bottom:8px">Конкретные компании</div>';
+    companies.forEach(c => {
+      companiesHtml += renderSignal(c.name, c.ticker, c.dir, c.prob, c.reason, null);
+    });
+  }
+  
+  return `
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="event-type">${typeName}</div>
+          <div class="event-title">${title}</div>
+        </div>
+        <span class="severity ${alertInfo.cls}">${alertInfo.label}</span>
+      </div>
+      <div class="event-desc">
+        ${desc || "Описание недоступно."}
+        <br><small style="color:#5a6a80">${country ? country + " • " : ""}${date}</small>
+      </div>
+      <div class="signals">${signalsHtml}</div>
+      ${companiesHtml}
+    </div>
+  `;
+}
+
+async function loadEvents() {
+  try {
+    const today = new Date();
+    const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
+    const from = yesterday.toISOString().split("T")[0];
+    const to = today.toISOString().split("T")[0];
+    
+    const url = `https://www.gdacs.org/gdacsapi/api/events/geteventlist/SEARCH?eventlist=EQ;TC;FL;VO;WF;DR&fromdate=${from}&todate=${to}`;
+    
+    const response = await fetch(url);
+    const data = await response.json();
+    
+    if (!data.features || data.features.length === 0) {
+      container.innerHTML = '<div class="loading">За последние 24 часа событий не найдено.</div>';
+      return;
+    }
+    
+    const events = data.features.slice(0, 10);
+    
+    let html = '<div class="section-title">События за 24 часа</div>';
+    events.forEach(ev => {
+      html += renderCard(ev.properties || ev);
+    });
+    
+    container.innerHTML = html;
+    
+  } catch (e) {
+    console.error("Ошибка:", e);
+    container.innerHTML = `
+      <div class="loading">
+        Не удалось загрузить данные.<br>
+        <small>Ошибка: ${e.message}</small>
+      </div>
+    `;
+  }
+}
+
+loadEvents();
+</script>
+
+</body>
+</html>
