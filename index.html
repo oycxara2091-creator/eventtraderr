@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>EventTrader — События + Компании + Графики</title>
+<title>EventTrader — Реальные цены</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
@@ -66,39 +66,43 @@
   .signal-asset { font-size: 13px; font-weight: 500; }
   .signal-ticker { font-size: 10px; color: #5a6a80; }
   .signal-reason { font-size: 10px; color: #7d8da6; margin-top: 2px; }
+  .signal-price { font-size: 11px; color: #60a5fa; margin-top: 2px; font-weight: 500; }
   .signal-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
   .signal-prob { display: flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; }
   .up { color: #4ade80; }
   .down { color: #f87171; }
   .neutral { color: #94a3b8; }
-  .garch-badge {
-    font-size: 9px;
-    color: #60a5fa;
-    background: #1e3a5f;
-    padding: 2px 5px;
-    border-radius: 4px;
-  }
   .sparkline { display: block; }
   .footer { text-align: center; padding: 24px 16px; font-size: 11px; color: #4a5568; line-height: 1.6; }
   .loading { text-align: center; padding: 40px 16px; color: #7d8da6; font-size: 14px; }
+  .status-bar {
+    background: #1a2332;
+    padding: 8px 16px;
+    font-size: 11px;
+    color: #7d8da6;
+    text-align: center;
+    border-bottom: 1px solid #1f2a3a;
+  }
 </style>
 </head>
 <body>
 
 <div class="header">
   <h1>Event<span>Trader</span></h1>
-  <p>События + компании + графики тренда</p>
+  <p>События + реальные цены (накопление истории)</p>
 </div>
+
+<div class="status-bar" id="status-bar">Загружаю...</div>
 
 <div class="container" id="events-container">
   <div class="loading">Загружаю события...</div>
 </div>
 
 <div class="footer">
-  Данные: GDACS + база компаний.<br>
-  Графики — демонстрационные.<br>
+  Данные: GDACS + Finnhub.<br>
+  Графики строятся по накопленной истории.<br>
   Не является инвестиционной рекомендацией.<br>
-  EventTrader v0.7
+  EventTrader v0.8
 </div>
 
 <script>
@@ -124,6 +128,14 @@ const DIRECTION_RULES = {
   "DR": { "wheat": { dir: "up", baseProb: 64 }, "corn": { dir: "up", baseProb: 60 }, "cattle": { dir: "up", baseProb: 50 } }
 };
 
+// Соответствие активов и тикеров для Finnhub
+const ASSET_TICKERS = {
+  "gold": "OANDA:XAU_USD",   // работает не всегда, попробуем
+  "jpy": "OANDA:USD_JPY",
+  "oil": "OANDA:BCO_USD",
+  "gas": "OANDA:NATGAS_USD"
+};
+
 // ==========================================
 // СЛОЙ 2: КОНКРЕТНЫЕ КОМПАНИИ
 // ==========================================
@@ -133,9 +145,9 @@ const COMPANY_RULES = {
     {
       country: "india",
       companies: [
-        { name: "Supreme Petrochem", ticker: "SPLPETRO.NS", dir: "down", prob: 78, reason: "Завод в Ченнаи остановлен из-за наводнения" },
+        { name: "Supreme Petrochem", ticker: "SPLPETRO.NS", dir: "down", prob: 78, reason: "Завод в Ченнаи остановлен" },
         { name: "Saraswati Sugar Mill", ticker: "—", dir: "down", prob: 65, reason: "Уничтожено сахара на ₹6 млрд" },
-        { name: "Punjab State Power Corp", ticker: "PSPCL", dir: "down", prob: 60, reason: "Ущерб ₹10,3 млрд, разрушены сети" }
+        { name: "Punjab State Power Corp", ticker: "PSPCL.NS", dir: "down", prob: 60, reason: "Ущерб ₹10,3 млрд" }
       ]
     }
   ],
@@ -144,8 +156,8 @@ const COMPANY_RULES = {
       country: "japan",
       companies: [
         { name: "Mitsui Kinzoku", ticker: "5706.T", dir: "down", prob: 75, reason: "Завод в Хатинохе повреждён" },
-        { name: "Kioxia", ticker: "285A.T", dir: "down", prob: 70, reason: "Завод в Иватэ приостановил NAND" },
-        { name: "Tokyo Electron", ticker: "8035.T", dir: "up", prob: 55, reason: "Заводы не пострадали, конкуренты — да" }
+        { name: "Kioxia", ticker: "285A.T", dir: "down", prob: 70, reason: "Завод в Иватэ остановлен" },
+        { name: "Tokyo Electron", ticker: "8035.T", dir: "up", prob: 55, reason: "Конкуренты пострадали" }
       ]
     }
   ],
@@ -153,8 +165,8 @@ const COMPANY_RULES = {
     {
       country: "usa",
       companies: [
-        { name: "Quanta Services", ticker: "PWR", dir: "up", prob: 72, reason: "Спрос на восстановление электросетей" },
-        { name: "Energizer", ticker: "ENR", dir: "up", prob: 68, reason: "Ажиотаж на батарейки и фонари" }
+        { name: "Quanta Services", ticker: "PWR", dir: "up", prob: 72, reason: "Восстановление электросетей" },
+        { name: "Energizer", ticker: "ENR", dir: "up", prob: 68, reason: "Спрос на батарейки" }
       ]
     }
   ]
@@ -177,38 +189,101 @@ function matchCompanies(eventType, description) {
 }
 
 // ==========================================
-// GARCH (упрощённая заглушка)
+// РАБОТА С ЦЕНАМИ (Finnhub + localStorage)
 // ==========================================
 
-function calcVolatility(assetKey) {
-  const baseVol = {
-    gold: 1.5, jpy: 0.9, auto: 2.1, oil: 2.8, gas: 3.4,
-    insurance: 2.0, agri: 2.3, logistics: 1.8, semicon: 3.1,
-    airlines: 2.5, timber: 1.9, wheat: 2.5, corn: 2.2, cattle: 1.9
-  };
-  return { movePercent: baseVol[assetKey] || 2.0 };
-}
+const STORAGE_KEY = "eventtrader_prices";
+const FINNHUB_FN = "/.netlify/functions/finnhub";
 
-// ==========================================
-// ГРАФИК (SPARKLINE)
-// ==========================================
-
-// Генерируем исторические точки для графика
-function generateTrendPoints(dir, points = 20) {
-  const data = [];
-  let value = 50; // середина
-  for (let i = 0; i < points; i++) {
-    const trend = dir === "up" ? 0.8 : -0.8;
-    const noise = (Math.random() - 0.5) * 3;
-    value += trend + noise;
-    value = Math.max(10, Math.min(90, value)); // держим в пределах
-    data.push(value);
+// Загружаем все сохранённые цены из localStorage
+function loadPriceHistory() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch (e) {
+    return {};
   }
-  return data;
 }
 
-// Рисуем спарклайн на canvas
+// Сохраняем историю цен
+function savePriceHistory(history) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
+  } catch (e) {
+    console.warn("Не удалось сохранить историю:", e);
+  }
+}
+
+// Получаем цену с Finnhub через Netlify Function
+async function fetchPrice(ticker) {
+  if (!ticker || ticker === "—") return null;
+  try {
+    const res = await fetch(`${FINNHUB_FN}?symbol=${encodeURIComponent(ticker)}`);
+    const data = await res.json();
+    if (data.c && data.c > 0) {
+      return { price: data.c, change: data.d, changePercent: data.dp };
+    }
+    return null;
+  } catch (e) {
+    console.warn("Ошибка получения цены для", ticker, e);
+    return null;
+  }
+}
+
+// Записываем точку в историю: { ticker: [{t, p}, ...] }
+function addPricePoint(history, ticker, price) {
+  if (!history[ticker]) history[ticker] = [];
+  const now = Date.now();
+  const points = history[ticker];
+  
+  // Не записываем, если последняя точка была меньше 5 минут назад
+  if (points.length > 0) {
+    const last = points[points.length - 1];
+    if (now - last.t < 5 * 60 * 1000) {
+      last.p = price; // обновляем цену
+      last.t = now;
+      return;
+    }
+  }
+  
+  points.push({ t: now, p: price });
+  
+  // Держим максимум 200 точек
+  if (points.length > 200) {
+    points.splice(0, points.length - 200);
+  }
+}
+
+// Получаем массив цен для графика
+function getPricePoints(history, ticker) {
+  if (!history[ticker] || history[ticker].length < 2) return null;
+  return history[ticker].map(p => p.p);
+}
+
+// ==========================================
+// ГРАФИКИ
+// ==========================================
+
 function drawSparkline(canvas, data, dir) {
+  if (!data || data.length < 2) {
+    // Если данных мало — рисуем плоскую линию
+    const ctx = canvas.getContext('2d');
+    const dpr = window.devicePixelRatio || 1;
+    const w = canvas.clientWidth;
+    const h = canvas.clientHeight;
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
+    ctx.scale(dpr, dpr);
+    
+    ctx.beginPath();
+    ctx.moveTo(0, h / 2);
+    ctx.lineTo(w, h / 2);
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    return;
+  }
+  
   const ctx = canvas.getContext('2d');
   const dpr = window.devicePixelRatio || 1;
   const w = canvas.clientWidth;
@@ -223,7 +298,10 @@ function drawSparkline(canvas, data, dir) {
   const range = max - min || 1;
   
   const stepX = w / (data.length - 1);
-  const color = dir === "up" ? '#4ade80' : dir === "down" ? '#f87171' : '#94a3b8';
+  
+  // Определяем цвет по тренду
+  const trend = data[data.length - 1] - data[0];
+  const color = trend > 0 ? '#4ade80' : trend < 0 ? '#f87171' : '#94a3b8';
   
   // Линия
   ctx.beginPath();
@@ -237,7 +315,7 @@ function drawSparkline(canvas, data, dir) {
   ctx.lineWidth = 1.5;
   ctx.stroke();
   
-  // Градиентная заливка под линией
+  // Заливка
   ctx.lineTo(w, h);
   ctx.lineTo(0, h);
   ctx.closePath();
@@ -248,24 +326,28 @@ function drawSparkline(canvas, data, dir) {
   ctx.fill();
 }
 
-// Создаём canvas-элемент
-function createSparkline(dir, width = 70, height = 28) {
+function createSparkline(data, fallbackDir, width = 70, height = 28) {
   const canvas = document.createElement('canvas');
   canvas.className = 'sparkline';
   canvas.style.width = width + 'px';
   canvas.style.height = height + 'px';
-  const data = generateTrendPoints(dir);
   
-  // Рисуем после добавления в DOM
-  requestAnimationFrame(() => drawSparkline(canvas, data, dir));
+  requestAnimationFrame(() => {
+    if (data && data.length >= 2) {
+      drawSparkline(canvas, data, null);
+    } else {
+      drawSparkline(canvas, null, fallbackDir);
+    }
+  });
   return canvas;
 }
 
 // ==========================================
-// ТЕХНИЧЕСКАЯ ЧАСТЬ
+// РЕНДЕР
 // ==========================================
 
 const container = document.getElementById("events-container");
+const statusBar = document.getElementById("status-bar");
 
 const typeNames = {
   "EQ": "🌍 Землетрясение", "TC": "🌀 Циклон", "FL": "🌊 Наводнение",
@@ -285,7 +367,7 @@ function formatDate(d) {
   });
 }
 
-function renderSignal(assetName, ticker, dir, prob, reason, volPercent) {
+function renderSignal(assetName, ticker, dir, prob, reason, priceData, historyData) {
   const arrow = dir === "up" ? "↑" : dir === "down" ? "↓" : "→";
   const cls = dir === "up" ? "up" : dir === "down" ? "down" : "neutral";
   const dirText = dir === "up" ? "Рост" : dir === "down" ? "Падение" : "Нейтр.";
@@ -295,22 +377,29 @@ function renderSignal(assetName, ticker, dir, prob, reason, volPercent) {
   
   const left = document.createElement('div');
   left.className = 'signal-left';
+  
+  let priceHtml = "";
+  if (priceData) {
+    const changeSign = priceData.changePercent > 0 ? "+" : "";
+    const changeClass = priceData.changePercent > 0 ? "up" : "down";
+    priceHtml = `<span class="signal-price">$${priceData.price.toFixed(2)} <span class="${changeClass}">${changeSign}${priceData.changePercent.toFixed(2)}%</span></span>`;
+  }
+  
   left.innerHTML = `
     <span class="signal-asset">${assetName}${ticker && ticker !== "—" ? `<span class="signal-ticker"> ${ticker}</span>` : ""}</span>
+    ${priceHtml}
     ${reason ? `<span class="signal-reason">${reason}</span>` : ""}
   `;
   
   const right = document.createElement('div');
   right.className = 'signal-right';
   
-  // График
-  const sparkline = createSparkline(dir);
+  const sparkline = createSparkline(historyData, dir);
   right.appendChild(sparkline);
   
-  // Текст
   const probEl = document.createElement('span');
   probEl.className = `signal-prob ${cls}`;
-  probEl.innerHTML = `${arrow} ${dirText} ${Math.round(prob)}%${volPercent ? `<span class="garch-badge">±${volPercent}%</span>` : ""}`;
+  probEl.textContent = `${arrow} ${dirText} ${Math.round(prob)}%`;
   right.appendChild(probEl);
   
   signal.appendChild(left);
@@ -318,7 +407,7 @@ function renderSignal(assetName, ticker, dir, prob, reason, volPercent) {
   return signal;
 }
 
-function renderCard(event) {
+async function renderCard(event, priceHistory) {
   const type = event.eventtype || "UNKNOWN";
   const typeName = typeNames[type] || type;
   const title = event.name || event.description || "Событие";
@@ -356,10 +445,10 @@ function renderCard(event) {
   Object.keys(assets).forEach(assetKey => {
     const assetName = assets[assetKey];
     const rule = rules[assetKey] || { dir: "down", baseProb: 40 };
-    const vol = calcVolatility(assetKey);
-    const volPercent = vol.movePercent.toFixed(1);
-    const finalProb = Math.min(rule.baseProb + Math.min(vol.movePercent * 2, 15), 95);
-    signalsContainer.appendChild(renderSignal(assetName, null, rule.dir, finalProb, null, volPercent));
+    const prob = rule.baseProb;
+    signalsContainer.appendChild(
+      renderSignal(assetName, null, rule.dir, prob, null, null, null)
+    );
   });
   
   // Конкретные компании
@@ -372,9 +461,19 @@ function renderCard(event) {
     titleEl.textContent = 'Конкретные компании';
     signalsContainer.appendChild(titleEl);
     
-    companies.forEach(c => {
-      signalsContainer.appendChild(renderSignal(c.name, c.ticker, c.dir, c.prob, c.reason, null));
-    });
+    for (const c of companies) {
+      const priceData = await fetchPrice(c.ticker);
+      let historyData = null;
+      
+      if (priceData) {
+        addPricePoint(priceHistory, c.ticker, priceData.price);
+        historyData = getPricePoints(priceHistory, c.ticker);
+      }
+      
+      signalsContainer.appendChild(
+        renderSignal(c.name, c.ticker, c.dir, c.prob, c.reason, priceData, historyData)
+      );
+    }
   }
   
   return card;
@@ -389,12 +488,18 @@ const FALLBACK_EVENTS = [
   {
     eventtype: "EQ", name: "Землетрясение M6.8 — Япония", alertlevel: "Red",
     description: "Сильное землетрясение у восточного побережья.", country: "Japan"
+  },
+  {
+    eventtype: "TC", name: "Ураган «Мелисса» — США", alertlevel: "Orange",
+    description: "Ураган приближается к побережью Флориды.", country: "USA"
   }
 ];
 
 async function loadEvents() {
   let eventsToShow = [];
   let dataSource = 'GDACS';
+
+  statusBar.textContent = "Загружаю события...";
 
   try {
     const today = new Date();
@@ -404,20 +509,24 @@ async function loadEvents() {
     const url = `https://www.gdacs.org/gdacsapi/api/events/geteventlist/SEARCH?eventlist=EQ;TC;FL;VO;WF;DR&fromdate=${from}&todate=${to}`;
 
     const response = await fetch(url);
-    if (!response.ok) throw new Error(`GDACS вернул статус ${response.status}`);
+    if (!response.ok) throw new Error(`GDACS: ${response.status}`);
     
     const data = await response.json();
     if (data.features && Array.isArray(data.features) && data.features.length > 0) {
       eventsToShow = data.features.map(ev => ev.properties || ev);
     } else {
-      throw new Error("GDACS вернул пустой список событий");
+      throw new Error("GDACS вернул пустой список");
     }
   } catch (e) {
-    console.warn("GDACS недоступен, показываю резервные данные:", e.message);
+    console.warn("GDACS недоступен, резервные данные:", e.message);
     dataSource = 'Резервные данные';
     eventsToShow = FALLBACK_EVENTS;
   }
 
+  statusBar.textContent = `Источник: ${dataSource}. Загружаю цены...`;
+
+  const priceHistory = loadPriceHistory();
+  
   container.innerHTML = '';
   
   const titleEl = document.createElement('div');
@@ -425,9 +534,16 @@ async function loadEvents() {
   titleEl.textContent = `События за 24 часа (${dataSource})`;
   container.appendChild(titleEl);
   
-  eventsToShow.slice(0, 10).forEach(ev => {
-    container.appendChild(renderCard(ev));
-  });
+  for (const ev of eventsToShow.slice(0, 5)) {
+    const card = await renderCard(ev, priceHistory);
+    container.appendChild(card);
+  }
+  
+  savePriceHistory(priceHistory);
+  
+  const totalTickers = Object.keys(priceHistory).length;
+  const totalPoints = Object.values(priceHistory).reduce((sum, arr) => sum + arr.length, 0);
+  statusBar.textContent = `Готово. В истории: ${totalTickers} тикеров, ${totalPoints} точек.`;
 }
 
 loadEvents();
