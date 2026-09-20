@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>EventTrader — Реальные цены</title>
+<title>EventTrader — Глобальные события</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
@@ -23,6 +23,14 @@
   .header h1 { font-size: 20px; font-weight: 600; letter-spacing: -0.5px; }
   .header h1 span { color: #4ade80; }
   .header p { font-size: 12px; color: #7d8da6; margin-top: 4px; }
+  .status-bar {
+    background: #1a2332;
+    padding: 8px 16px;
+    font-size: 11px;
+    color: #7d8da6;
+    text-align: center;
+    border-bottom: 1px solid #1f2a3a;
+  }
   .container { padding: 16px; }
   .section-title {
     font-size: 11px;
@@ -75,13 +83,14 @@
   .sparkline { display: block; }
   .footer { text-align: center; padding: 24px 16px; font-size: 11px; color: #4a5568; line-height: 1.6; }
   .loading { text-align: center; padding: 40px 16px; color: #7d8da6; font-size: 14px; }
-  .status-bar {
-    background: #1a2332;
-    padding: 8px 16px;
-    font-size: 11px;
-    color: #7d8da6;
-    text-align: center;
-    border-bottom: 1px solid #1f2a3a;
+  .country-badge {
+    display: inline-block;
+    font-size: 9px;
+    background: #1e3a5f;
+    color: #60a5fa;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-left: 6px;
   }
 </style>
 </head>
@@ -89,7 +98,7 @@
 
 <div class="header">
   <h1>Event<span>Trader</span></h1>
-  <p>События + реальные цены (накопление истории)</p>
+  <p>Глобальные события + реальные цены</p>
 </div>
 
 <div class="status-bar" id="status-bar">Загружаю...</div>
@@ -99,74 +108,133 @@
 </div>
 
 <div class="footer">
-  Данные: GDACS + Finnhub.<br>
-  Графики строятся по накопленной истории.<br>
+  Данные: GDACS + Finnhub + Twelve Data.<br>
   Не является инвестиционной рекомендацией.<br>
-  EventTrader v0.8
+  EventTrader v0.9
 </div>
 
 <script>
 // ==========================================
-// СЛОЙ 1: ОБЩИЕ АКТИВЫ
+// ОБЩИЕ АКТИВЫ ПО ТИПУ СОБЫТИЯ
 // ==========================================
 
 const EVENT_ASSET_MAP = {
-  "EQ": { "gold": "Золото (XAU/USD)", "jpy": "JPY (Японская йена)", "auto": "Автопром (сектор)" },
+  "EQ": { "gold": "Золото (XAU/USD)", "oil": "Нефть (Brent)", "insurance": "Страхование (сектор)" },
   "TC": { "oil": "Нефть (Brent)", "gas": "Природный газ", "insurance": "Страхование (сектор)" },
-  "FL": { "agri": "Сельхоз. товары", "logistics": "Логистика (сектор)", "semicon": "Полупроводники" },
+  "FL": { "agri": "Сельхоз. товары", "logistics": "Логистика (сектор)", "insurance": "Страхование (сектор)" },
   "VO": { "airlines": "Авиаперевозки (сектор)", "gold": "Золото" },
   "WF": { "timber": "Древесина", "agri": "Сельхоз. товары" },
   "DR": { "wheat": "Пшеница", "corn": "Кукуруза", "cattle": "Скот (говядина)" }
 };
 
 const DIRECTION_RULES = {
-  "EQ": { "gold": { dir: "up", baseProb: 70 }, "jpy": { dir: "up", baseProb: 62 }, "auto": { dir: "down", baseProb: 58 } },
+  "EQ": { "gold": { dir: "up", baseProb: 70 }, "oil": { dir: "up", baseProb: 55 }, "insurance": { dir: "down", baseProb: 60 } },
   "TC": { "oil": { dir: "up", baseProb: 65 }, "gas": { dir: "up", baseProb: 55 }, "insurance": { dir: "down", baseProb: 60 } },
-  "FL": { "agri": { dir: "up", baseProb: 68 }, "logistics": { dir: "down", baseProb: 55 }, "semicon": { dir: "up", baseProb: 52 } },
+  "FL": { "agri": { dir: "up", baseProb: 68 }, "logistics": { dir: "down", baseProb: 55 }, "insurance": { dir: "down", baseProb: 58 } },
   "VO": { "airlines": { dir: "down", baseProb: 72 }, "gold": { dir: "up", baseProb: 48 } },
   "WF": { "timber": { dir: "up", baseProb: 58 }, "agri": { dir: "up", baseProb: 45 } },
   "DR": { "wheat": { dir: "up", baseProb: 64 }, "corn": { dir: "up", baseProb: 60 }, "cattle": { dir: "up", baseProb: 50 } }
 };
 
-// Соответствие активов и тикеров для Finnhub
-const ASSET_TICKERS = {
-  "gold": "OANDA:XAU_USD",   // работает не всегда, попробуем
-  "jpy": "OANDA:USD_JPY",
-  "oil": "OANDA:BCO_USD",
-  "gas": "OANDA:NATGAS_USD"
-};
-
 // ==========================================
-// СЛОЙ 2: КОНКРЕТНЫЕ КОМПАНИИ
+// КОМПАНИИ ПО СТРАНАМ
 // ==========================================
 
 const COMPANY_RULES = {
   "FL": [
     {
       country: "india",
+      countryName: "🇮🇳 Индия",
       companies: [
         { name: "Supreme Petrochem", ticker: "SPLPETRO.NS", dir: "down", prob: 78, reason: "Завод в Ченнаи остановлен" },
-        { name: "Saraswati Sugar Mill", ticker: "—", dir: "down", prob: 65, reason: "Уничтожено сахара на ₹6 млрд" },
-        { name: "Punjab State Power Corp", ticker: "PSPCL.NS", dir: "down", prob: 60, reason: "Ущерб ₹10,3 млрд" }
+        { name: "Saraswati Sugar", ticker: "—", dir: "down", prob: 65, reason: "Уничтожено сахара на ₹6 млрд" },
+        { name: "Punjab Power", ticker: "PSPCL.NS", dir: "down", prob: 60, reason: "Ущерб ₹10,3 млрд" }
+      ]
+    },
+    {
+      country: "germany",
+      countryName: "🇩🇪 Германия",
+      companies: [
+        { name: "Siemens", ticker: "SIE.DE", dir: "down", prob: 68, reason: "Заводы в зоне затопления" },
+        { name: "Volkswagen", ticker: "VOW3.DE", dir: "down", prob: 62, reason: "Приостановка конвейеров" },
+        { name: "Allianz", ticker: "ALV.DE", dir: "down", prob: 60, reason: "Страховые выплаты" }
+      ]
+    },
+    {
+      country: "france",
+      countryName: "🇫🇷 Франция",
+      companies: [
+        { name: "TotalEnergies", ticker: "TTE.PA", dir: "up", prob: 55, reason: "Перебои поставок нефти" },
+        { name: "Sanofi", ticker: "SAN.PA", dir: "down", prob: 52, reason: "Проблемы с логистикой" }
+      ]
+    },
+    {
+      country: "england",
+      countryName: "🇬🇧 Великобритания",
+      companies: [
+        { name: "Shell", ticker: "SHEL.L", dir: "up", prob: 58, reason: "Рост цен на энергоносители" },
+        { name: "HSBC", ticker: "HSBA.L", dir: "down", prob: 55, reason: "Кредитные риски" }
+      ]
+    },
+    {
+      country: "united kingdom",
+      countryName: "🇬🇧 Великобритания",
+      companies: [
+        { name: "Shell", ticker: "SHEL.L", dir: "up", prob: 58, reason: "Рост цен на энергоносители" },
+        { name: "HSBC", ticker: "HSBA.L", dir: "down", prob: 55, reason: "Кредитные риски" }
       ]
     }
   ],
   "EQ": [
     {
       country: "japan",
+      countryName: "🇯🇵 Япония",
       companies: [
-        { name: "Mitsui Kinzoku", ticker: "5706.T", dir: "down", prob: 75, reason: "Завод в Хатинохе повреждён" },
-        { name: "Kioxia", ticker: "285A.T", dir: "down", prob: 70, reason: "Завод в Иватэ остановлен" },
+        { name: "Mitsui Kinzoku", ticker: "5706.T", dir: "down", prob: 75, reason: "Завод повреждён" },
+        { name: "Kioxia", ticker: "285A.T", dir: "down", prob: 70, reason: "Остановка NAND" },
         { name: "Tokyo Electron", ticker: "8035.T", dir: "up", prob: 55, reason: "Конкуренты пострадали" }
+      ]
+    },
+    {
+      country: "saudi",
+      countryName: "🇸🇦 Саудовская Аравия",
+      companies: [
+        { name: "Saudi Aramco", ticker: "2222.SR", dir: "up", prob: 60, reason: "Рост цен на нефть" },
+        { name: "SABIC", ticker: "2010.SR", dir: "down", prob: 55, reason: "Заводы под угрозой" }
+      ]
+    },
+    {
+      country: "germany",
+      countryName: "🇩🇪 Германия",
+      companies: [
+        { name: "SAP", ticker: "SAP.DE", dir: "down", prob: 55, reason: "Остановка офисов" },
+        { name: "Siemens", ticker: "SIE.DE", dir: "down", prob: 60, reason: "Риск для производств" }
       ]
     }
   ],
   "TC": [
     {
       country: "usa",
+      countryName: "🇺🇸 США",
       companies: [
-        { name: "Quanta Services", ticker: "PWR", dir: "up", prob: 72, reason: "Восстановление электросетей" },
+        { name: "Quanta Services", ticker: "PWR", dir: "up", prob: 72, reason: "Восстановление сетей" },
         { name: "Energizer", ticker: "ENR", dir: "up", prob: 68, reason: "Спрос на батарейки" }
+      ]
+    },
+    {
+      country: "saudi",
+      countryName: "🇸🇦 Саудовская Аравия",
+      companies: [
+        { name: "Saudi Aramco", ticker: "2222.SR", dir: "up", prob: 65, reason: "Перебои нефти" }
+      ]
+    }
+  ],
+  "DR": [
+    {
+      country: "australia",
+      countryName: "🇦🇺 Австралия",
+      companies: [
+        { name: "BHP Group", ticker: "BHP.AX", dir: "up", prob: 60, reason: "Рост цен на сырьё" }
       ]
     }
   ]
@@ -177,113 +245,83 @@ function matchCompanies(eventType, description) {
   if (!rules) return [];
   const desc = (description || "").toLowerCase();
   const matched = [];
+  const seenCountries = new Set();
+  
   rules.forEach(rule => {
-    if (desc.includes(rule.country)) matched.push(...rule.companies);
+    if (desc.includes(rule.country) && !seenCountries.has(rule.countryName)) {
+      seenCountries.add(rule.countryName);
+      matched.push({
+        country: rule.countryName,
+        companies: rule.companies
+      });
+    }
   });
-  const seen = new Set();
-  return matched.filter(c => {
-    if (seen.has(c.ticker)) return false;
-    seen.add(c.ticker);
-    return true;
-  });
+  return matched;
 }
 
 // ==========================================
-// РАБОТА С ЦЕНАМИ (Finnhub + localStorage)
+// РАБОТА С ЦЕНАМИ
 // ==========================================
 
-const STORAGE_KEY = "eventtrader_prices";
 const FINNHUB_FN = "/.netlify/functions/finnhub";
+const TWELVEDATA_FN = "/.netlify/functions/twelvedata";
 
-// Загружаем все сохранённые цены из localStorage
-function loadPriceHistory() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : {};
-  } catch (e) {
-    return {};
-  }
+// Определяем, американский ли тикер (без суффикса или с известными американскими биржами)
+function isUSStock(ticker) {
+  if (!ticker || ticker === "—") return false;
+  return !ticker.includes(".");
 }
 
-// Сохраняем историю цен
-function savePriceHistory(history) {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
-  } catch (e) {
-    console.warn("Не удалось сохранить историю:", e);
-  }
-}
-
-// Получаем цену с Finnhub через Netlify Function
+// Получаем текущую цену: сначала Finnhub (для США), потом Twelve Data (для всех)
 async function fetchPrice(ticker) {
   if (!ticker || ticker === "—") return null;
+  
+  // Пробуем Finnhub для американских тикеров
+  if (isUSStock(ticker)) {
+    try {
+      const res = await fetch(`${FINNHUB_FN}?symbol=${encodeURIComponent(ticker)}`);
+      const data = await res.json();
+      if (data.c && data.c > 0) {
+        return { price: data.c, change: data.d, changePercent: data.dp };
+      }
+    } catch (e) { /* идём дальше */ }
+  }
+  
+  // Twelve Data — для всех остальных
   try {
-    const res = await fetch(`${FINNHUB_FN}?symbol=${encodeURIComponent(ticker)}`);
+    const res = await fetch(`${TWELVEDATA_FN}?symbol=${encodeURIComponent(ticker)}&outputsize=2`);
     const data = await res.json();
-    if (data.c && data.c > 0) {
-      return { price: data.c, change: data.d, changePercent: data.dp };
+    if (data.values && data.values.length >= 2) {
+      const current = parseFloat(data.values[0].close);
+      const prev = parseFloat(data.values[1].close);
+      const change = current - prev;
+      const changePercent = (change / prev) * 100;
+      return { price: current, change, changePercent };
     }
-    return null;
-  } catch (e) {
-    console.warn("Ошибка получения цены для", ticker, e);
-    return null;
-  }
+  } catch (e) { /* ignore */ }
+  
+  return null;
 }
 
-// Записываем точку в историю: { ticker: [{t, p}, ...] }
-function addPricePoint(history, ticker, price) {
-  if (!history[ticker]) history[ticker] = [];
-  const now = Date.now();
-  const points = history[ticker];
-  
-  // Не записываем, если последняя точка была меньше 5 минут назад
-  if (points.length > 0) {
-    const last = points[points.length - 1];
-    if (now - last.t < 5 * 60 * 1000) {
-      last.p = price; // обновляем цену
-      last.t = now;
-      return;
+// Получаем историю (30 дней) из Twelve Data
+async function fetchHistory(ticker) {
+  if (!ticker || ticker === "—") return null;
+  try {
+    const res = await fetch(`${TWELVEDATA_FN}?symbol=${encodeURIComponent(ticker)}&outputsize=30`);
+    const data = await res.json();
+    if (data.values && data.values.length >= 2) {
+      // Возвращаем массив цен в хронологическом порядке (старые → новые)
+      return data.values.map(v => parseFloat(v.close)).reverse();
     }
-  }
-  
-  points.push({ t: now, p: price });
-  
-  // Держим максимум 200 точек
-  if (points.length > 200) {
-    points.splice(0, points.length - 200);
-  }
-}
-
-// Получаем массив цен для графика
-function getPricePoints(history, ticker) {
-  if (!history[ticker] || history[ticker].length < 2) return null;
-  return history[ticker].map(p => p.p);
+  } catch (e) { /* ignore */ }
+  return null;
 }
 
 // ==========================================
 // ГРАФИКИ
 // ==========================================
 
-function drawSparkline(canvas, data, dir) {
-  if (!data || data.length < 2) {
-    // Если данных мало — рисуем плоскую линию
-    const ctx = canvas.getContext('2d');
-    const dpr = window.devicePixelRatio || 1;
-    const w = canvas.clientWidth;
-    const h = canvas.clientHeight;
-    canvas.width = w * dpr;
-    canvas.height = h * dpr;
-    ctx.scale(dpr, dpr);
-    
-    ctx.beginPath();
-    ctx.moveTo(0, h / 2);
-    ctx.lineTo(w, h / 2);
-    ctx.strokeStyle = '#334155';
-    ctx.lineWidth = 1;
-    ctx.stroke();
-    return;
-  }
-  
+function drawSparkline(canvas, data, fallbackDir) {
   const ctx = canvas.getContext('2d');
   const dpr = window.devicePixelRatio || 1;
   const w = canvas.clientWidth;
@@ -293,19 +331,32 @@ function drawSparkline(canvas, data, dir) {
   canvas.height = h * dpr;
   ctx.scale(dpr, dpr);
   
-  const min = Math.min(...data);
-  const max = Math.max(...data);
+  let color;
+  let points;
+  
+  if (data && data.length >= 2) {
+    const trend = data[data.length - 1] - data[0];
+    color = trend > 0 ? '#4ade80' : trend < 0 ? '#f87171' : '#94a3b8';
+    points = data;
+  } else {
+    // Fallback — плоская линия по направлению сигнала
+    color = fallbackDir === 'up' ? '#4ade80' : fallbackDir === 'down' ? '#f87171' : '#94a3b8';
+    ctx.beginPath();
+    ctx.moveTo(0, h / 2);
+    ctx.lineTo(w, h / 2);
+    ctx.strokeStyle = color + '60';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    return;
+  }
+  
+  const min = Math.min(...points);
+  const max = Math.max(...points);
   const range = max - min || 1;
+  const stepX = w / (points.length - 1);
   
-  const stepX = w / (data.length - 1);
-  
-  // Определяем цвет по тренду
-  const trend = data[data.length - 1] - data[0];
-  const color = trend > 0 ? '#4ade80' : trend < 0 ? '#f87171' : '#94a3b8';
-  
-  // Линия
   ctx.beginPath();
-  data.forEach((val, i) => {
+  points.forEach((val, i) => {
     const x = i * stepX;
     const y = h - ((val - min) / range) * (h - 4) - 2;
     if (i === 0) ctx.moveTo(x, y);
@@ -315,7 +366,6 @@ function drawSparkline(canvas, data, dir) {
   ctx.lineWidth = 1.5;
   ctx.stroke();
   
-  // Заливка
   ctx.lineTo(w, h);
   ctx.lineTo(0, h);
   ctx.closePath();
@@ -326,19 +376,12 @@ function drawSparkline(canvas, data, dir) {
   ctx.fill();
 }
 
-function createSparkline(data, fallbackDir, width = 70, height = 28) {
+function createSparkline(historyData, fallbackDir, width = 70, height = 28) {
   const canvas = document.createElement('canvas');
   canvas.className = 'sparkline';
   canvas.style.width = width + 'px';
   canvas.style.height = height + 'px';
-  
-  requestAnimationFrame(() => {
-    if (data && data.length >= 2) {
-      drawSparkline(canvas, data, null);
-    } else {
-      drawSparkline(canvas, null, fallbackDir);
-    }
-  });
+  requestAnimationFrame(() => drawSparkline(canvas, historyData, fallbackDir));
   return canvas;
 }
 
@@ -407,7 +450,18 @@ function renderSignal(assetName, ticker, dir, prob, reason, priceData, historyDa
   return signal;
 }
 
-async function renderCard(event, priceHistory) {
+// Очередь запросов с задержкой (для лимита Twelve Data)
+async function processCompaniesSequentially(companies, callback) {
+  for (const c of companies) {
+    const priceData = await fetchPrice(c.ticker);
+    const historyData = await fetchHistory(c.ticker);
+    await callback(c, priceData, historyData);
+    // Задержка 250 мс между запросами
+    await new Promise(r => setTimeout(r, 250));
+  }
+}
+
+async function renderCard(event) {
   const type = event.eventtype || "UNKNOWN";
   const typeName = typeNames[type] || type;
   const title = event.name || event.description || "Событие";
@@ -445,53 +499,52 @@ async function renderCard(event, priceHistory) {
   Object.keys(assets).forEach(assetKey => {
     const assetName = assets[assetKey];
     const rule = rules[assetKey] || { dir: "down", baseProb: 40 };
-    const prob = rule.baseProb;
     signalsContainer.appendChild(
-      renderSignal(assetName, null, rule.dir, prob, null, null, null)
+      renderSignal(assetName, null, rule.dir, rule.baseProb, null, null, null)
     );
   });
   
-  // Конкретные компании
-  const companies = matchCompanies(type, desc + " " + country);
-  if (companies.length > 0) {
+  // Конкретные компании по странам
+  const countryGroups = matchCompanies(type, desc + " " + country);
+  
+  for (const group of countryGroups) {
     const titleEl = document.createElement('div');
     titleEl.className = 'section-title';
     titleEl.style.marginTop = '14px';
     titleEl.style.marginBottom = '8px';
-    titleEl.textContent = 'Конкретные компании';
+    titleEl.innerHTML = `Конкретные компании <span class="country-badge">${group.country}</span>`;
     signalsContainer.appendChild(titleEl);
     
-    for (const c of companies) {
-      const priceData = await fetchPrice(c.ticker);
-      let historyData = null;
-      
-      if (priceData) {
-        addPricePoint(priceHistory, c.ticker, priceData.price);
-        historyData = getPricePoints(priceHistory, c.ticker);
-      }
-      
+    await processCompaniesSequentially(group.companies, async (c, priceData, historyData) => {
       signalsContainer.appendChild(
         renderSignal(c.name, c.ticker, c.dir, c.prob, c.reason, priceData, historyData)
       );
-    }
+    });
   }
   
   return card;
 }
 
-// Демо-события на случай недоступности GDACS
+// ==========================================
+// ЗАГРУЗКА
+// ==========================================
+
 const FALLBACK_EVENTS = [
   {
-    eventtype: "FL", name: "Наводнение в Индии", alertlevel: "Red",
-    description: "Масштабные наводнения в промышленных регионах.", country: "India"
+    eventtype: "FL", name: "Наводнение в Германии", alertlevel: "Red",
+    description: "Масштабные наводнения в Баварии и Баден-Вюртемберге.", country: "Germany"
   },
   {
     eventtype: "EQ", name: "Землетрясение M6.8 — Япония", alertlevel: "Red",
-    description: "Сильное землетрясение у восточного побережья.", country: "Japan"
+    description: "Сильное землетрясение у восточного побережья Японии.", country: "Japan"
   },
   {
     eventtype: "TC", name: "Ураган «Мелисса» — США", alertlevel: "Orange",
     description: "Ураган приближается к побережью Флориды.", country: "USA"
+  },
+  {
+    eventtype: "DR", name: "Засуха в Австралии", alertlevel: "Orange",
+    description: "Сильнейшая засуха в Новом Южном Уэльсе.", country: "Australia"
   }
 ];
 
@@ -515,39 +568,14 @@ async function loadEvents() {
     if (data.features && Array.isArray(data.features) && data.features.length > 0) {
       eventsToShow = data.features.map(ev => ev.properties || ev);
     } else {
-      throw new Error("GDACS вернул пустой список");
+      throw new Error("Пустой список");
     }
   } catch (e) {
-    console.warn("GDACS недоступен, резервные данные:", e.message);
+    console.warn("GDACS недоступен:", e.message);
     dataSource = 'Резервные данные';
     eventsToShow = FALLBACK_EVENTS;
   }
 
-  statusBar.textContent = `Источник: ${dataSource}. Загружаю цены...`;
+  statusBar.textContent = `Источник: ${dataSource}. Загружаю цены и графики...`;
 
-  const priceHistory = loadPriceHistory();
-  
-  container.innerHTML = '';
-  
-  const titleEl = document.createElement('div');
-  titleEl.className = 'section-title';
-  titleEl.textContent = `События за 24 часа (${dataSource})`;
-  container.appendChild(titleEl);
-  
-  for (const ev of eventsToShow.slice(0, 5)) {
-    const card = await renderCard(ev, priceHistory);
-    container.appendChild(card);
-  }
-  
-  savePriceHistory(priceHistory);
-  
-  const totalTickers = Object.keys(priceHistory).length;
-  const totalPoints = Object.values(priceHistory).reduce((sum, arr) => sum + arr.length, 0);
-  statusBar.textContent = `Готово. В истории: ${totalTickers} тикеров, ${totalPoints} точек.`;
-}
-
-loadEvents();
-</script>
-
-</body>
-</html>
+  container.innerHTML = 
