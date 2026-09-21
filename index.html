@@ -16,9 +16,19 @@
   .search-bar input:focus { border-color: #4ade80; }
   .search-bar input::placeholder { color: #5a6a80; }
   .container { padding: 16px; }
+  .chart-section { background: #111827; border: 1px solid #1f2a3a; border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+  .chart-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+  .chart-title { font-size: 13px; font-weight: 600; }
+  .chart-subtitle { font-size: 11px; color: #7d8da6; margin-top: 2px; }
+  .chart-price { font-size: 20px; font-weight: 700; color: #60a5fa; text-align: right; }
+  .chart-change { font-size: 11px; margin-top: 2px; text-align: right; }
+  .chart-change.up { color: #4ade80; }
+  .chart-svg { width: 100%; height: 140px; display: block; }
+  .chart-periods { display: flex; gap: 6px; margin-top: 12px; justify-content: center; }
+  .chart-period { font-size: 11px; padding: 6px 12px; background: #0d1420; color: #7d8da6; border-radius: 6px; border: none; cursor: pointer; }
+  .chart-period.active { background: #1e3a5f; color: #60a5fa; }
   .count-bar { font-size: 11px; color: #5a6a80; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px; }
   .event-card { background: #111827; border: 1px solid #1f2a3a; border-radius: 12px; padding: 16px; margin-bottom: 10px; }
-  .event-card.hidden { display: none; }
   .event-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; gap: 8px; }
   .event-year { font-size: 11px; background: #1e3a5f; color: #60a5fa; padding: 3px 8px; border-radius: 4px; font-weight: 600; flex-shrink: 0; }
   .event-country { font-size: 11px; color: #7d8da6; text-transform: uppercase; letter-spacing: 0.5px; }
@@ -34,76 +44,18 @@
   .sector-tag.up { color: #4ade80; }
   .sector-tag.down { color: #f87171; }
   .no-results { text-align: center; padding: 40px 16px; color: #7d8da6; }
- .chart-section {
-  background: #111827;
-  border: 1px solid #1f2a3a;
-  border-radius: 12px;
-  padding: 16px;
-  margin-bottom: 16px;
-}
-.chart-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 12px;
-}
-.chart-title {
-  font-size: 13px;
-  font-weight: 600;
-}
-.chart-subtitle {
-  font-size: 11px;
-  color: #7d8da6;
-  margin-top: 2px;
-}
-.chart-price {
-  font-size: 20px;
-  font-weight: 700;
-  color: #60a5fa;
-  text-align: right;
-}
-.chart-change {
-  font-size: 11px;
-  margin-top: 2px;
-  text-align: right;
-}
-.chart-change.up { color: #4ade80; }
-.chart-change.down { color: #f87171; }
-.chart-svg {
-  width: 100%;
-  height: 140px;
-  display: block;
-}
-.chart-periods {
-  display: flex;
-  gap: 6px;
-  margin-top: 12px;
-  justify-content: center;
-}
-.chart-period {
-  font-size: 11px;
-  padding: 6px 12px;
-  background: #0d1420;
-  color: #7d8da6;
-  border-radius: 6px;
-  border: none;
-  cursor: pointer;
-}
-.chart-period.active {
-  background: #1e3a5f;
-  color: #60a5fa;
-}
   .footer { text-align: center; padding: 24px 16px; font-size: 11px; color: #4a5568; line-height: 1.6; }
 </style>
 </head>
 <body>
 <div class="header">
   <h1>Event<span>Trader</span></h1>
-  <p>100 событий за 10 лет, которые повлияли на рынки</p>
+  <p>110 событий за 10 лет, которые повлияли на рынки</p>
 </div>
 <div class="search-bar">
   <input type="text" id="search" placeholder="Поиск: год, страна, событие...">
-</div><div class="container">
+</div>
+<div class="container">
   <div class="chart-section">
     <div class="chart-header">
       <div>
@@ -111,8 +63,8 @@
         <div class="chart-subtitle">Средняя цена за год, 2016–2026</div>
       </div>
       <div>
-        <div class="chart-price" id="gold-price">$4,886</div>
-        <div class="chart-change up" id="gold-change">+163% за 10 лет</div>
+        <div class="chart-price">$4,886</div>
+        <div class="chart-change up">+163% за 10 лет</div>
       </div>
     </div>
     <svg class="chart-svg" id="gold-chart" viewBox="0 0 300 100" preserveAspectRatio="none">
@@ -127,8 +79,6 @@
       <button class="chart-period">10Л</button>
     </div>
   </div>
-</div>
-<div class="container">
   <div class="count-bar" id="count-bar">Загрузка...</div>
   <div id="events-container"></div>
 </div>
@@ -141,120 +91,151 @@
 const EVENTS = [
  { year: 2016, country: "Великобритания", type: "economy", title: "Брекзит — референдум", desc: "Фунт упал на 8%, рынки потеряли $2 трлн за два дня.", sectors: ["Золото ↑", "Финансы ↓", "Фунт ↓"] },
 { year: 2016, country: "Китай", type: "economy", title: "Обвал фондового рынка Китая", desc: "Shanghai Composite потерял 40%. Влияние на сырьё.", sectors: ["Сырьё ↓", "Акции Китая ↓"] },
-{ year: 2016, country: "США", type: "economy", title: "ФРС повышает ставку впервые за 10 лет", desc: "Укрепление доллара, давление на развивающиеся рынки.", sectors: ["Банки ↑", "Доллар ↑"] },
-{ year: 2016, country: "Япония", type: "economy", title: "Банк Японии вводит отрицательную ставку", desc: "Иена укрепилась. Экспорт под давлением.", sectors: ["Банки Японии ↓", "Иена ↑"] },
-{ year: 2016, country: "Италия", type: "economy", title: "Конституционный референдум", desc: "Отставка премьера Ренци. Банковский сектор под давлением.", sectors: ["Банки Италии ↓", "Евро ↓"] },
+{ year: 2016, country: "США", type: "economy", title: "ФРС повышает ставку", desc: "Укрепление доллара, давление на развивающиеся рынки.", sectors: ["Банки ↑", "Доллар ↑"] },
+{ year: 2016, country: "Япония", type: "economy", title: "Отрицательная ставка Банка Японии", desc: "Иена укрепилась. Экспорт под давлением.", sectors: ["Банки Японии ↓", "Иена ↑"] },
+{ year: 2016, country: "Италия", type: "economy", title: "Конституционный референдум", desc: "Отставка премьера Ренци. Банки под давлением.", sectors: ["Банки Италии ↓", "Евро ↓"] },
 { year: 2016, country: "Гаити", type: "disaster", title: "Ураган Мэтью", desc: "Ураган 4 категории. Ущерб $4 млрд.", sectors: ["Стройматериалы ↑", "Страхование ↓"] },
 { year: 2016, country: "Эквадор", type: "disaster", title: "Землетрясение M7.8", desc: "Погибло 676 человек. Ущерб $3 млрд.", sectors: ["Нефть ↑", "Страхование ↓"] },
-{ year: 2016, country: "Саудовская Аравия", type: "economy", title: "План Vision 2030", desc: "Диверсификация экономики. Влияние на нефтяные цены.", sectors: ["Нефть ↓", "Aramco ↑"] },
-{ year: 2016, country: "Германия", type: "economy", title: "Deutsche Bank — кризис доверия", desc: "Крупнейший банк Германии под давлением.", sectors: ["Банки Европы ↓"] },
-{ year: 2016, country: "США", type: "war", title: "Алеппо — эвакуация", desc: "Геополитическая напряжённость. Рост нефти и золота.", sectors: ["Нефть ↑", "Золото ↑"] },
-{ year: 2017, country: "США", type: "economy", title: "Налоговая реформа Трампа", desc: "Снижение корпоративного налога с 35% до 21%.", sectors: ["Банки ↑", "Промышленность ↑"] },
-{ year: 2017, country: "США", type: "economy", title: "Bitcoin — первый крупный рост", desc: "Цена выросла с $1000 до $20,000.", sectors: ["Крипто ↑", "Банки ↓"] },
+{ year: 2016, country: "Саудовская Аравия", type: "economy", title: "План Vision 2030", desc: "Диверсификация экономики. Влияние на нефть.", sectors: ["Нефть ↓", "Aramco ↑"] },
+{ year: 2016, country: "Германия", type: "economy", title: "Deutsche Bank — кризис", desc: "Крупнейший банк Германии под давлением.", sectors: ["Банки Европы ↓"] },
+{ year: 2016, country: "США", type: "war", title: "Алеппо — эвакуация", desc: "Рост нефти и золота.", sectors: ["Нефть ↑", "Золото ↑"] },
+{ year: 2017, country: "США", type: "economy", title: "Налоговая реформа Трампа", desc: "Снижение налога с 35% до 21%.", sectors: ["Банки ↑", "Промышленность ↑"] },
+{ year: 2017, country: "США", type: "economy", title: "Bitcoin — первый рост", desc: "Цена выросла с $1000 до $20,000.", sectors: ["Крипто ↑", "Банки ↓"] },
 { year: 2017, country: "Катар", type: "war", title: "Блокада Катара", desc: "Саудовская Аравия и ОАЭ ввели блокаду.", sectors: ["Газ ↑", "Нефть ↑", "Авиация ↓"] },
-{ year: 2017, country: "США", type: "disaster", title: "Ураганы Харви, Ирма, Мария", desc: "Ущерб $300 млрд. Рекордные страховые выплаты.", sectors: ["Нефть ↑", "Страхование ↓"] },
-{ year: 2017, country: "Мексика", type: "disaster", title: "Землетрясение M7.1", desc: "Погибло 370 человек. Ущерб $8 млрд.", sectors: ["Страхование ↓", "Песо ↓"] },
-{ year: 2017, country: "Северная Корея", type: "war", title: "Ядерные испытания КНДР", desc: "Рост геополитической напряжённости.", sectors: ["Золото ↑", "Иена ↑"] },
-{ year: 2017, country: "Испания", type: "war", title: "Референдум в Каталонии", desc: "Политический кризис. Евро под давлением.", sectors: ["Евро ↓", "Банки Испании ↓"] },
-{ year: 2017, country: "Китай", type: "economy", title: "Китай: рост долга и теневой банкинг", desc: "Ограничения на вывоз капитала.", sectors: ["Акции Китая ↓", "Сырьё ↓"] },
-{ year: 2017, country: "Великобритания", type: "economy", title: "Brexit: начало переговоров", desc: "Фунт под давлением. Компании переносят штаб-квартиры.", sectors: ["Фунт ↓", "Недвижимость ↓"] },
-{ year: 2017, country: "Саудовская Аравия", type: "economy", title: "Антикоррупционная чистка", desc: "Задержаны принцы и бизнесмены.", sectors: ["Нефть ↑", "Акции Саудовской Аравии ↓"] },
-{ year: 2018, country: "США", type: "war", title: "Торговая война США-Китай", desc: "Тарифы на $250 млрд китайских товаров.", sectors: ["Технологии ↓", "Сельхоз США ↓"] },
-{ year: 2018, country: "США", type: "economy", title: "ФРС: 4 повышения ставки", desc: "Ставка выросла до 2.5%. S&P 500 потерял 6.2% в декабре.", sectors: ["Банки ↑", "Технологии ↓"] },
-{ year: 2018, country: "Иран", type: "sanctions", title: "Санкции против Ирана (выход из JCPOA)", desc: "Трамп вышел из сделки. Нефть выросла до $85.", sectors: ["Нефть ↑", "Авиация ↓"] },
-{ year: 2018, country: "Турция", type: "economy", title: "Кризис турецкой лиры", desc: "Лира упала на 40%. Инфляция 25%.", sectors: ["Лира ↓", "Банки Европы ↓"] },
-{ year: 2018, country: "Аргентина", type: "economy", title: "Валютный кризис", desc: "Песо упал на 50%. МВФ выделил $57 млрд.", sectors: ["Песо ↓", "Облигации ↓"] },
-{ year: 2018, country: "Индонезия", type: "disaster", title: "Землетрясение и цунами в Сулавеси", desc: "Погибло 4300 человек. Ущерб $900 млн.", sectors: ["Страхование ↓", "Сырьё ↑"] },
-{ year: 2018, country: "США", type: "disaster", title: "Лесные пожары в Калифорнии (Camp Fire)", desc: "Ущерб $16.5 млрд. PG&E обанкротилась.", sectors: ["Коммунальные ↓", "Страхование ↓"] },
-{ year: 2018, country: "Япония", type: "disaster", title: "Землетрясение в Осаке M6.1", desc: "Погибло 5 человек. Заводы остановлены.", sectors: ["Автопром ↓", "Электроника ↓"] },
-{ year: 2018, country: "Германия", type: "economy", title: "Дизельный скандал Volkswagen", desc: "Volkswagen оштрафован на $1 млрд.", sectors: ["Автопром ↓", "Экология ↑"] },
-{ year: 2018, country: "Саудовская Аравия", type: "war", title: "Убийство Хашогги", desc: "Кризис в отношениях с Западом.", sectors: ["Нефть ↑", "Aramco ↓"] },
- { year: 2019, country: "США", type: "sanctions", title: "Санкции против Huawei", desc: "Запрет на поставки чипов. Пострадали американские поставщики.", sectors: ["Полупроводники ↓", "TSMC ↑"] },
-{ year: 2019, country: "США", type: "economy", title: "Инверсия кривой доходности", desc: "Сигнал рецессии. Рынки упали. ФРС снизила ставку.", sectors: ["Банки ↓", "Облигации ↑", "Золото ↑"] },
-{ year: 2019, country: "США", type: "economy", title: "ФРС: три снижения ставки", desc: "Технологии взлетели. Рынки обновили максимумы.", sectors: ["Технологии ↑", "Золото ↑"] },
-{ year: 2019, country: "Саудовская Аравия", type: "economy", title: "IPO Saudi Aramco", desc: "Крупнейшее IPO в истории — $25.6 млрд.", sectors: ["Нефть ↑", "Aramco ↑"] },
-{ year: 2019, country: "Китай", type: "economy", title: "Замедление роста Китая до 6%", desc: "Самый медленный рост за 30 лет.", sectors: ["Сырьё ↓", "Акции Китая ↓"] },
-{ year: 2019, country: "Япония", type: "economy", title: "Повышение налога с 8% до 10%", desc: "Удар по потребительским расходам.", sectors: ["Ритейл ↓", "Потребительские ↓"] },
-{ year: 2019, country: "Иран", type: "war", title: "Убийство Сулеймани", desc: "Иранский генерал убит в Багдаде. Нефть выросла на 4%.", sectors: ["Нефть ↑", "Золото ↑", "Авиация ↓"] },
-{ year: 2019, country: "Австралия", type: "disaster", title: "Лесные пожары в Австралии", desc: "Ущерб $100 млрд. Погибло 1 млрд животных.", sectors: ["Туризм ↓", "Сырьё ↑"] },
-{ year: 2019, country: "Индия", type: "economy", title: "Отмена банкнот 500 и 2000 рупий", desc: "Демонетизация ударила по малому бизнесу.", sectors: ["Банки Индии ↓", "Ритейл ↓"] },
-{ year: 2019, country: "Венесуэла", type: "sanctions", title: "Санкции США против Венесуэлы", desc: "Нефтяное эмбарго. PDVSA под санкциями.", sectors: ["Нефть ↑", "Акции Венесуэлы ↓"] },
-{ year: 2020, country: "Китай", type: "disaster", title: "COVID-19 — вспышка в Ухане", desc: "Пандемия. Рынки упали на 30%. Центробанки влили $10 трлн.", sectors: ["Авиация ↓", "Технологии ↑", "Здравоохранение ↑"] },
-{ year: 2020, country: "США", type: "economy", title: "ФРС: ставка до 0%", desc: "Экстренное снижение. Бесконечный QE. Рынки отскочили.", sectors: ["Технологии ↑", "Банки ↓", "Золото ↑"] },
-{ year: 2020, country: "США", type: "economy", title: "Нефть WTI — отрицательные цены", desc: "Впервые в истории нефть стоила -$37.", sectors: ["Нефть ↓", "Энергетика ↓", "Авиация ↓"] },
-{ year: 2020, country: "США", type: "economy", title: "Tesla: рост в 7 раз", desc: "Акции Tesla выросли с $85 до $700. Включение в S&P 500.", sectors: ["Tesla ↑", "Электромобили ↑"] },
+{ year: 2017, country: "США", type: "disaster", title: "Ураганы Харви, Ирма, Мария", desc: "Ущерб $300 млрд.", sectors: ["Нефть ↑", "Страхование ↓"] },
+{ year: 2017, country: "Мексика", type: "disaster", title: "Землетрясение M7.1", desc: "Погибло 370 человек.", sectors: ["Страхование ↓", "Песо ↓"] },
+{ year: 2017, country: "Северная Корея", type: "war", title: "Ядерные испытания КНДР", desc: "Рост напряжённости.", sectors: ["Золото ↑", "Иена ↑"] },
+{ year: 2017, country: "Испания", type: "war", title: "Референдум в Каталонии", desc: "Политический кризис.", sectors: ["Евро ↓", "Банки Испании ↓"] },
+{ year: 2017, country: "Китай", type: "economy", title: "Рост долга и теневой банкинг", desc: "Ограничения на вывоз капитала.", sectors: ["Акции Китая ↓", "Сырьё ↓"] },
+{ year: 2017, country: "Великобритания", type: "economy", title: "Brexit: переговоры", desc: "Фунт под давлением.", sectors: ["Фунт ↓", "Недвижимость ↓"] },
+{ year: 2017, country: "Саудовская Аравия", type: "economy", title: "Антикоррупционная чистка", desc: "Задержаны принцы и бизнесмены.", sectors: ["Нефть ↑", "Aramco ↓"] },
+{ year: 2018, country: "США", type: "war", title: "Торговая война США-Китай", desc: "Тарифы на $250 млрд.", sectors: ["Технологии ↓", "Сельхоз США ↓"] },
+{ year: 2018, country: "США", type: "economy", title: "ФРС: 4 повышения ставки", desc: "S&P 500 потерял 6.2% в декабре.", sectors: ["Банки ↑", "Технологии ↓"] },
+{ year: 2018, country: "Иран", type: "sanctions", title: "Санкции против Ирана", desc: "Выход из JCPOA. Нефть выросла до $85.", sectors: ["Нефть ↑", "Авиация ↓"] },
+{ year: 2018, country: "Турция", type: "economy", title: "Кризис лиры", desc: "Лира упала на 40%.", sectors: ["Лира ↓", "Банки Европы ↓"] },
+{ year: 2018, country: "Аргентина", type: "economy", title: "Валютный кризис", desc: "Песо упал на 50%.", sectors: ["Песо ↓", "Облигации ↓"] },
+{ year: 2018, country: "Индонезия", type: "disaster", title: "Землетрясение в Сулавеси", desc: "Погибло 4300 человек.", sectors: ["Страхование ↓", "Сырьё ↑"] },
+{ year: 2018, country: "США", type: "disaster", title: "Пожары в Калифорнии", desc: "PG&E обанкротилась.", sectors: ["Коммунальные ↓", "Страхование ↓"] },
+{ year: 2018, country: "Япония", type: "disaster", title: "Землетрясение в Осаке", desc: "Заводы остановлены.", sectors: ["Автопром ↓", "Электроника ↓"] },
+{ year: 2018, country: "Германия", type: "economy", title: "Дизельный скандал VW", desc: "Штраф $1 млрд.", sectors: ["Автопром ↓", "Экология ↑"] },
+{ year: 2018, country: "Саудовская Аравия", type: "war", title: "Убийство Хашогги", desc: "Кризис с Западом.", sectors: ["Нефть ↑", "Aramco ↓"] },
+{ year: 2019, country: "США", type: "sanctions", title: "Санкции против Huawei", desc: "Запрет на поставки чипов.", sectors: ["Полупроводники ↓", "TSMC ↑"] },
+{ year: 2019, country: "США", type: "economy", title: "Инверсия кривой доходности", desc: "Сигнал рецессии.", sectors: ["Банки ↓", "Облигации ↑", "Золото ↑"] },
+{ year: 2019, country: "США", type: "economy", title: "ФРС: три снижения ставки", desc: "Технологии взлетели.", sectors: ["Технологии ↑", "Золото ↑"] },
+{ year: 2019, country: "Саудовская Аравия", type: "economy", title: "IPO Saudi Aramco", desc: "$25.6 млрд — крупнейшее IPO.", sectors: ["Нефть ↑", "Aramco ↑"] },
+{ year: 2019, country: "Китай", type: "economy", title: "Замедление роста до 6%", desc: "Самый медленный за 30 лет.", sectors: ["Сырьё ↓", "Акции Китая ↓"] },
+{ year: 2019, country: "Япония", type: "economy", title: "Налог вырос до 10%", desc: "Удар по потреблению.", sectors: ["Ритейл ↓", "Потребительские ↓"] },
+{ year: 2019, country: "Иран", type: "war", title: "Убийство Сулеймани", desc: "Нефть выросла на 4%.", sectors: ["Нефть ↑", "Золото ↑", "Авиация ↓"] },
+{ year: 2019, country: "Австралия", type: "disaster", title: "Пожары в Австралии", desc: "Ущерб $100 млрд.", sectors: ["Туризм ↓", "Сырьё ↑"] },
+{ year: 2019, country: "Индия", type: "economy", title: "Демонетизация рупий", desc: "Удар по малому бизнесу.", sectors: ["Банки Индии ↓", "Ритейл ↓"] },
+{ year: 2019, country: "Венесуэла", type: "sanctions", title: "Санкции США", desc: "Нефтяное эмбарго.", sectors: ["Нефть ↑", "Акции Венесуэлы ↓"] },
+ { year: 2020, country: "Китай", type: "disaster", title: "COVID-19 — вспышка в Ухане", desc: "Пандемия. Рынки упали на 30%. Центробанки влили $10 трлн.", sectors: ["Авиация ↓", "Технологии ↑", "Здравоохранение ↑"] },
+{ year: 2020, country: "США", type: "economy", title: "ФРС: ставка до 0%", desc: "Экстренное снижение. Бесконечный QE.", sectors: ["Технологии ↑", "Банки ↓", "Золото ↑"] },
+{ year: 2020, country: "США", type: "economy", title: "Нефть WTI — отрицательные цены", desc: "Впервые нефть стоила -$37.", sectors: ["Нефть ↓", "Энергетика ↓", "Авиация ↓"] },
+{ year: 2020, country: "США", type: "economy", title: "Tesla: рост в 7 раз", desc: "Акции выросли с $85 до $700.", sectors: ["Tesla ↑", "Электромобили ↑"] },
 { year: 2020, country: "США", type: "economy", title: "Bitcoin: институциональный интерес", desc: "MicroStrategy и Tesla купили BTC.", sectors: ["Крипто ↑", "Банки ↑"] },
-{ year: 2020, country: "США", type: "disaster", title: "Лесные пожары на Западе США", desc: "Рекордные пожары. Ущерб $20 млрд.", sectors: ["Коммунальные ↓", "Страхование ↓"] },
-{ year: 2020, country: "Турция", type: "disaster", title: "Землетрясение в Измире M7.0", desc: "Погибло 117 человек. Ущерб $400 млн.", sectors: ["Страхование ↓", "Лира ↓"] },
-{ year: 2020, country: "Ливан", type: "disaster", title: "Взрыв в порту Бейрута", desc: "Погибло 200 человек. Ущерб $15 млрд.", sectors: ["Страхование ↓", "Сырьё ↑"] },
-{ year: 2020, country: "США", type: "economy", title: "Банкротство Hertz и JCPenney", desc: "Волна банкротств из-за пандемии.", sectors: ["Банки ↓", "Ритейл ↓"] },
-{ year: 2020, country: "США", type: "economy", title: "Выборы в США: победа Байдена", desc: "Рынки выросли на ожиданиях стимулов.", sectors: ["Зелёная энергия ↑", "Нефть ↓"] },
-{ year: 2021, country: "США", type: "economy", title: "GameStop — короткое сжатие", desc: "Акции выросли на 1700%. Розница против хедж-фондов.", sectors: ["GameStop ↑", "Хедж-фонды ↓"] },
-{ year: 2021, country: "США", type: "economy", title: "Инфляция в США — 7%", desc: "Максимум за 40 лет. ФРС начала сворачивать стимулы.", sectors: ["Банки ↑", "Технологии ↓"] },
-{ year: 2021, country: "Китай", type: "sanctions", title: "Китай: репрессии против технологий", desc: "Запрет на IPO Didi. $1 трлн потерь.", sectors: ["Технологии Китая ↓", "Акции США ↑"] },
-{ year: 2021, country: "Китай", type: "economy", title: "Evergrande — кризис", desc: "Крупнейший застройщик на грани дефолта.", sectors: ["Недвижимость Китая ↓", "Банки ↓"] },
+{ year: 2020, country: "США", type: "disaster", title: "Пожары на Западе США", desc: "Ущерб $20 млрд.", sectors: ["Коммунальные ↓", "Страхование ↓"] },
+{ year: 2020, country: "Турция", type: "disaster", title: "Землетрясение в Измире", desc: "Погибло 117 человек.", sectors: ["Страхование ↓", "Лира ↓"] },
+{ year: 2020, country: "Ливан", type: "disaster", title: "Взрыв в Бейруте", desc: "Ущерб $15 млрд.", sectors: ["Страхование ↓", "Сырьё ↑"] },
+{ year: 2020, country: "США", type: "economy", title: "Банкротство Hertz и JCPenney", desc: "Волна банкротств.", sectors: ["Банки ↓", "Ритейл ↓"] },
+{ year: 2020, country: "США", type: "economy", title: "Выборы: победа Байдена", desc: "Рынки выросли на стимулах.", sectors: ["Зелёная энергия ↑", "Нефть ↓"] },
+{ year: 2021, country: "США", type: "economy", title: "GameStop — короткое сжатие", desc: "Акции выросли на 1700%.", sectors: ["GameStop ↑", "Хедж-фонды ↓"] },
+{ year: 2021, country: "США", type: "economy", title: "Инфляция 7%", desc: "Максимум за 40 лет.", sectors: ["Банки ↑", "Технологии ↓"] },
+{ year: 2021, country: "Китай", type: "sanctions", title: "Репрессии против технологий", desc: "Запрет на IPO Didi. $1 трлн потерь.", sectors: ["Технологии Китая ↓", "Акции США ↑"] },
+{ year: 2021, country: "Китай", type: "economy", title: "Evergrande — кризис", desc: "Застройщик на грани дефолта.", sectors: ["Недвижимость Китая ↓", "Банки ↓"] },
 { year: 2021, country: "США", type: "economy", title: "Инфраструктурный пакет Байдена", desc: "$1.2 трлн на инфраструктуру.", sectors: ["Промышленность ↑", "Стройматериалы ↑"] },
-{ year: 2021, country: "США", type: "economy", title: "Bitcoin: новый максимум $69,000", desc: "Крипто-бум. ETF на фьючерсы одобрены.", sectors: ["Крипто ↑", "Банки ↑"] },
-{ year: 2021, country: "Германия", type: "disaster", title: "Наводнение в Европе", desc: "Погибло 200 человек в Германии и Бельгии.", sectors: ["Страхование ↓", "Стройматериалы ↑"] },
-{ year: 2021, country: "США", type: "economy", title: "Мем-акции: AMC, Blackberry", desc: "Розничные инвесторы снова против хедж-фондов.", sectors: ["AMC ↑", "Хедж-фонды ↓"] },
-{ year: 2021, country: "США", type: "economy", title: "Кризис цепочек поставок", desc: "Нехватка чипов. Автопром остановил заводы.", sectors: ["Автопром ↓", "Полупроводники ↑"] },
-{ year: 2021, country: "Афганистан", type: "war", title: "Вывод войск США из Афганистана", desc: "Талибан захватил власть.", sectors: ["Золото ↑", "Нефть ↑"] },
- { year: 2022, country: "Россия", type: "war", title: "Вторжение России в Украину", desc: "Нефть выросла до $130. Газ — рекорд. Санкции против России.", sectors: ["Нефть ↑", "Газ ↑", "Золото ↑", "Акции России ↓"] },
-{ year: 2022, country: "США", type: "economy", title: "ФРС: 7 повышений ставки", desc: "Ставка выросла с 0% до 4.5%. Технологии потеряли 30%.", sectors: ["Банки ↑", "Технологии ↓", "Недвижимость ↓"] },
-{ year: 2022, country: "США", type: "economy", title: "Инфляция 9.1% — максимум за 40 лет", desc: "Пик инфляции. ФРС агрессивно повышает ставку.", sectors: ["Банки ↑", "Ритейл ↓", "Золото ↑"] },
-{ year: 2022, country: "Великобритания", type: "economy", title: "Кризис UK Gilts", desc: "Пенсионные фонды на грани краха. Банк Англии вмешался.", sectors: ["Фунт ↓", "Облигации UK ↓"] },
-{ year: 2022, country: "Китай", type: "economy", title: "Китай: локдауны COVID", desc: "Шанхай закрыт на 2 месяца. Удар по цепочкам поставок.", sectors: ["Акции Китая ↓", "Логистика ↓"] },
-{ year: 2022, country: "США", type: "economy", title: "Крах FTX", desc: "Вторая по величине крипто-биржа обанкротилась. $8 млрд потеряно.", sectors: ["Крипто ↓", "Банки ↓"] },
-{ year: 2022, country: "Шри-Ланка", type: "economy", title: "Дефолт Шри-Ланки", desc: "Первая страна, объявившая дефолт в 2022.", sectors: ["Облигации Шри-Ланки ↓"] },
-{ year: 2022, country: "Европа", type: "disaster", title: "Засуха в Европе", desc: "Сильнейшая за 500 лет. Реки обмелели.", sectors: ["Энергетика ↑", "Сельхоз ↑", "Логистика ↓"] },
-{ year: 2022, country: "США", type: "economy", title: "Tesla: падение на 65%", desc: "Акции Tesla упали с $400 до $120. Покупка Twitter Маском.", sectors: ["Tesla ↓", "Twitter ↑"] },
-{ year: 2022, country: "США", type: "economy", title: "Обвал технологических акций", desc: "Nasdaq потерял 33%. Amazon, Meta, Netflix упали на 50%+.", sectors: ["Технологии ↓", "Банки ↓"] },
-{ year: 2023, country: "США", type: "economy", title: "Крах Silicon Valley Bank", desc: "Второй по величине банк США обанкротился.", sectors: ["Банки ↓", "Технологии ↓", "Золото ↑"] },
-{ year: 2023, country: "США", type: "economy", title: "ChatGPT — бум ИИ", desc: "Nvidia выросла на 240%. Microsoft, Google вложили миллиарды в ИИ.", sectors: ["Nvidia ↑", "ИИ ↑", "Технологии ↑"] },
-{ year: 2023, country: "Швейцария", type: "economy", title: "Credit Suisse — поглощение UBS", desc: "Крупнейший банк Швейцарии куплен за $3 млрд.", sectors: ["Банки Европы ↓", "Золото ↑"] },
-{ year: 2023, country: "Израиль", type: "war", title: "Война Израиля и Хамас", desc: "Атака 7 октября. Нефть выросла на 5%. Золото ↑.", sectors: ["Нефть ↑", "Золото ↑", "Авиация ↓"] },
-{ year: 2023, country: "США", type: "economy", title: "ФРС: пауза в повышении ставки", desc: "Ставка на пике 5.5%. Рынки выросли.", sectors: ["Технологии ↑", "Банки ↑"] },
-{ year: 2023, country: "Китай", type: "economy", title: "Китай: кризис недвижимости", desc: "Evergrande обанкротилась. Country Garden на грани.", sectors: ["Недвижимость Китая ↓", "Сырьё ↓"] },
-{ year: 2023, country: "Япония", type: "economy", title: "Банк Японии: конец отрицательных ставок", desc: "Иена укрепилась. Экспортёры под давлением.", sectors: ["Иена ↑", "Экспорт Японии ↓"] },
-{ year: 2023, country: "США", type: "economy", title: "Nvidia — $1 трлн капитализации", desc: "Акции выросли в 3 раза за год. ИИ-бум.", sectors: ["Nvidia ↑", "Полупроводники ↑"] },
-{ year: 2023, country: "Турция", type: "disaster", title: "Землетрясение в Турции и Сирии M7.8", desc: "Погибло 50 000 человек. Ущерб $100 млрд.", sectors: ["Страхование ↓", "Стройматериалы ↑"] },
-{ year: 2023, country: "США", type: "economy", title: "Банкротство First Republic", desc: "Третий банк США за год. JPMorgan купил активы.", sectors: ["Банки ↓", "JPMorgan ↑"] },
-   { year: 2024, country: "США", type: "economy", title: "ФРС начинает снижать ставку", desc: "Первое снижение за 4 года. Технологии взлетели.", sectors: ["Технологии ↑", "Банки ↑", "Золото ↑"] },
-  { year: 2024, country: "США", type: "economy", title: "Nvidia — $3 трлн капитализации", desc: "Обогнала Apple. Крупнейшая компания мира.", sectors: ["Nvidia ↑", "ИИ ↑"] },
-  { year: 2024, country: "США", type: "economy", title: "Bitcoin: одобрение спотовых ETF", desc: "SEC одобрила 11 ETF. Bitcoin вырос до $73,000.", sectors: ["Крипто ↑", "Банки ↑"] },
-  { year: 2024, country: "Иран", type: "war", title: "Атака Ирана на Израиль", desc: "Прямая атака дронами и ракетами. Нефть выросла на 4%.", sectors: ["Нефть ↑", "Золото ↑", "Авиация ↓"] },
-  { year: 2024, country: "США", type: "economy", title: "Выборы в США: победа Трампа", desc: "Рынки выросли. Крипто взлетело. Тарифы на Китай.", sectors: ["Крипто ↑", "Банки ↑", "Технологии ↑"] },
-  { year: 2024, country: "Япония", type: "economy", title: "Банк Японии повышает ставку", desc: "Первый раз за 17 лет. Carry trade обвалился.", sectors: ["Иена ↑", "Акции Японии ↓"] },
-  { year: 2024, country: "США", type: "disaster", title: "Ураган Хелен", desc: "Ущерб $50 млрд. Погибло 200 человек.", sectors: ["Страхование ↓", "Энергетика ↑"] },
-  { year: 2024, country: "США", type: "economy", title: "Крах банка NYCB", desc: "Региональный банк под давлением коммерческой недвижимости.", sectors: ["Банки ↓", "Недвижимость ↓"] },
-  { year: 2024, country: "Китай", type: "economy", title: "Китай: стимулы на $1.4 трлн", desc: "Поддержка рынка недвижимости и акций.", sectors: ["Акции Китая ↑", "Недвижимость Китая ↑"] },
-  { year: 2024, country: "Саудовская Аравия", type: "economy", title: "Saudi Aramco: снижение добычи", desc: "ОПЕК+ продлил сокращение добычи. Нефть выросла.", sectors: ["Нефть ↑", "Aramco ↑"] },
-  { year: 2025, country: "США", type: "sanctions", title: "Трамп: новые тарифы на Китай", desc: "Тарифы до 60% на китайские товары. Торговая война 2.0.", sectors: ["Технологии ↓", "Китайские акции ↓", "Сельхоз США ↓"] },
-  { year: 2025, country: "США", type: "economy", title: "Nvidia — $5 трлн капитализации", desc: "Первая компания в истории. ИИ-бум продолжается.", sectors: ["Nvidia ↑", "ИИ ↑"] },
-  { year: 2025, country: "США", type: "economy", title: "ФРС: дальнейшее снижение ставки", desc: "Ставка снижена до 3.5%. Рынки обновили максимумы.", sectors: ["Технологии ↑", "Банки ↑"] },
-  { year: 2025, country: "Иран", type: "war", title: "Конфликт Израиля и Ирана", desc: "Прямое противостояние. Нефть выросла до $95.", sectors: ["Нефть ↑", "Золото ↑", "Авиация ↓"] },
-  { year: 2025, country: "США", type: "economy", title: "Крипто-бум: Bitcoin $100,000", desc: "Институциональный интерес. Трамп создал крипто-резерв.", sectors: ["Крипто ↑", "Банки ↑"] },
-  { year: 2025, country: "Китай", type: "economy", title: "Китай: рост ВВП 4.5%", desc: "Самый медленный рост за десятилетие.", sectors: ["Акции Китая ↓", "Сырьё ↓"] },
-  { year: 2025, country: "Европа", type: "economy", title: "Энергетический кризис в Европе", desc: "Цены на газ выросли в 3 раза. Германия в рецессии.", sectors: ["Газ ↑", "Промышленность Европы ↓"] },
-  { year: 2025, country: "Япония", type: "economy", title: "Япония: конец эры дешёвых денег", desc: "Ставка выросла до 1%. Carry trade unwind.", sectors: ["Иена ↑", "Акции Японии ↓"] },
-  { year: 2025, country: "США", type: "disaster", title: "Лесные пожары в Лос-Анджелесе", desc: "Ущерб $30 млрд. Эвакуация 200 000 человек.", sectors: ["Страхование ↓", "Коммунальные ↓"] },
-  { year: 2025, country: "Индия", type: "economy", title: "Индия: рост 7% — самая быстрорастущая экономика", desc: "Инвестиции в технологии и производство.", sectors: ["Акции Индии ↑", "Технологии ↑"] },
-  { year: 2026, country: "США", type: "economy", title: "Nvidia: $6 трлн капитализации", desc: "Продолжение ИИ-бума. Крупнейшая компания мира.", sectors: ["Nvidia ↑", "ИИ ↑"] },
-  { year: 2026, country: "США", type: "economy", title: "Apple: ИИ-революция в iPhone", desc: "Новые модели с ИИ. Акции выросли на 20%.", sectors: ["Apple ↑", "Технологии ↑"] },
-  { year: 2026, country: "Китай", type: "economy", title: "Китай: дефляция", desc: "Цены падают. Рост замедлился. Стимулы не работают.", sectors: ["Акции Китая ↓", "Сырьё ↓"] },
-  { year: 2026, country: "США", type: "economy", title: "Bitcoin: $150,000", desc: "Новый максимум. Институциональный интерес растёт.", sectors: ["Крипто ↑", "Банки ↑"] },
-  { year: 2026, country: "Ближний Восток", type: "war", title: "Конфликт в Красном море", desc: "Атаки на суда. Логистика нарушена. Нефть выросла.", sectors: ["Нефть ↑", "Логистика ↓", "Страхование ↑"] },
-  { year: 2026, country: "США", type: "economy", title: "Microsoft: $4 трлн капитализации", desc: "ИИ-бум. Azure вырос на 40%.", sectors: ["Microsoft ↑", "Технологии ↑"] },
-  { year: 2026, country: "Европа", type: "economy", title: "ЕС: кризис энергетики", desc: "Газ вырос в 2 раза. Промышленность переезжает в США.", sectors: ["Газ ↑", "Промышленность Европы ↓"] },
-  { year: 2026, country: "Япония", type: "economy", title: "Япония: рост ставки до 1.5%", desc: "Конец эпохи дешёвых денег. Рынки волатильны.", sectors: ["Иена ↑", "Акции Японии ↓"] },
-  { year: 2026, country: "США", type: "economy", title: "Tesla: роботакси", desc: "Запуск роботакси в 10 городах. Акции выросли на 30%.", sectors: ["Tesla ↑", "Электромобили ↑"] },
-  { year: 2026, country: "Мир", type: "economy", title: "Глобальная рецессия", desc: "США, Европа, Китай замедляются. Центробанки снижают ставки.", sectors: ["Банки ↓", "Технологии ↓", "Золото ↑"] }
+{ year: 2021, country: "США", type: "economy", title: "Bitcoin: максимум $69,000", desc: "Крипто-бум. ETF одобрены.", sectors: ["Крипто ↑", "Банки ↑"] },
+{ year: 2021, country: "Германия", type: "disaster", title: "Наводнение в Европе", desc: "Погибло 200 человек.", sectors: ["Страхование ↓", "Стройматериалы ↑"] },
+{ year: 2021, country: "США", type: "economy", title: "Мем-акции: AMC, Blackberry", desc: "Розница против хедж-фондов.", sectors: ["AMC ↑", "Хедж-фонды ↓"] },
+{ year: 2021, country: "США", type: "economy", title: "Кризис цепочек поставок", desc: "Нехватка чипов. Автопром встал.", sectors: ["Автопром ↓", "Полупроводники ↑"] },
+{ year: 2021, country: "Афганистан", type: "war", title: "Вывод войск США", desc: "Талибан захватил власть.", sectors: ["Золото ↑", "Нефть ↑"] },
+{ year: 2022, country: "Россия", type: "war", title: "Вторжение России в Украину", desc: "Нефть выросла до $130. Санкции против России.", sectors: ["Нефть ↑", "Газ ↑", "Золото ↑"] },
+{ year: 2022, country: "США", type: "economy", title: "ФРС: 7 повышений ставки", desc: "Ставка выросла с 0% до 4.5%.", sectors: ["Банки ↑", "Технологии ↓"] },
+{ year: 2022, country: "США", type: "economy", title: "Инфляция 9.1%", desc: "Максимум за 40 лет.", sectors: ["Банки ↑", "Ритейл ↓", "Золото ↑"] },
+{ year: 2022, country: "Великобритания", type: "economy", title: "Кризис UK Gilts", desc: "Пенсионные фонды на грани краха.", sectors: ["Фунт ↓", "Облигации UK ↓"] },
+{ year: 2022, country: "Китай", type: "economy", title: "Локдауны COVID", desc: "Шанхай закрыт на 2 месяца.", sectors: ["Акции Китая ↓", "Логистика ↓"] },
+{ year: 2022, country: "США", type: "economy", title: "Крах FTX", desc: "$8 млрд потеряно.", sectors: ["Крипто ↓", "Банки ↓"] },
+{ year: 2022, country: "Шри-Ланка", type: "economy", title: "Дефолт Шри-Ланки", desc: "Первая страна с дефолтом в 2022.", sectors: ["Облигации ↓"] },
+{ year: 2022, country: "Европа", type: "disaster", title: "Засуха в Европе", desc: "Сильнейшая за 500 лет.", sectors: ["Энергетика ↑", "Сельхоз ↑"] },
+{ year: 2022, country: "США", type: "economy", title: "Tesla: падение на 65%", desc: "Акции упали с $400 до $120.", sectors: ["Tesla ↓", "Twitter ↑"] },
+{ year: 2022, country: "США", type: "economy", title: "Обвал технологических акций", desc: "Nasdaq потерял 33%.", sectors: ["Технологии ↓", "Банки ↓"] },
+{ year: 2023, country: "США", type: "economy", title: "Крах Silicon Valley Bank", desc: "Второй банк США обанкротился.", sectors: ["Банки ↓", "Технологии ↓", "Золото ↑"] },
+{ year: 2023, country: "США", type: "economy", title: "ChatGPT — бум ИИ", desc: "Nvidia выросла на 240%.", sectors: ["Nvidia ↑", "ИИ ↑", "Технологии ↑"] },
+{ year: 2023, country: "Швейцария", type: "economy", title: "Credit Suisse — поглощение UBS", desc: "Куплен за $3 млрд.", sectors: ["Банки Европы ↓", "Золото ↑"] },
+{ year: 2023, country: "Израиль", type: "war", title: "Война Израиля и Хамас", desc: "Нефть выросла на 5%.", sectors: ["Нефть ↑", "Золото ↑", "Авиация ↓"] },
+{ year: 2023, country: "США", type: "economy", title: "ФРС: пауза в повышении", desc: "Ставка на пике 5.5%.", sectors: ["Технологии ↑", "Банки ↑"] },
+{ year: 2023, country: "Китай", type: "economy", title: "Кризис недвижимости Китая", desc: "Evergrande обанкротилась.", sectors: ["Недвижимость Китая ↓", "Сырьё ↓"] },
+{ year: 2023, country: "Япония", type: "economy", title: "Конец отрицательных ставок", desc: "Иена укрепилась.", sectors: ["Иена ↑", "Экспорт Японии ↓"] },
+{ year: 2023, country: "США", type: "economy", title: "Nvidia — $1 трлн", desc: "Акции выросли в 3 раза.", sectors: ["Nvidia ↑", "Полупроводники ↑"] },
+{ year: 2023, country: "Турция", type: "disaster", title: "Землетрясение в Турции и Сирии", desc: "Погибло 50 000 человек.", sectors: ["Страхование ↓", "Стройматериалы ↑"] },
+{ year: 2023, country: "США", type: "economy", title: "Банкротство First Republic", desc: "Третий банк США за год.", sectors: ["Банки ↓", "JPMorgan ↑"] },
+   { year: 2024, country: "США", type: "economy", title: "ФРС начинает снижать ставку", desc: "Первое снижение за 4 года.", sectors: ["Технологии ↑", "Банки ↑", "Золото ↑"] },
+  { year: 2024, country: "США", type: "economy", title: "Nvidia — $3 трлн", desc: "Обогнала Apple.", sectors: ["Nvidia ↑", "ИИ ↑"] },
+  { year: 2024, country: "США", type: "economy", title: "Bitcoin: одобрение ETF", desc: "SEC одобрила 11 ETF.", sectors: ["Крипто ↑", "Банки ↑"] },
+  { year: 2024, country: "Иран", type: "war", title: "Атака Ирана на Израиль", desc: "Нефть выросла на 4%.", sectors: ["Нефть ↑", "Золото ↑"] },
+  { year: 2024, country: "США", type: "economy", title: "Выборы: победа Трампа", desc: "Крипто взлетело.", sectors: ["Крипто ↑", "Банки ↑"] },
+  { year: 2024, country: "Япония", type: "economy", title: "Банк Японии повышает ставку", desc: "Первый раз за 17 лет.", sectors: ["Иена ↑", "Акции Японии ↓"] },
+  { year: 2024, country: "США", type: "disaster", title: "Ураган Хелен", desc: "Ущерб $50 млрд.", sectors: ["Страхование ↓", "Энергетика ↑"] },
+  { year: 2024, country: "США", type: "economy", title: "Крах банка NYCB", desc: "Региональный банк под давлением.", sectors: ["Банки ↓", "Недвижимость ↓"] },
+  { year: 2024, country: "Китай", type: "economy", title: "Стимулы на $1.4 трлн", desc: "Поддержка рынка.", sectors: ["Акции Китая ↑"] },
+  { year: 2024, country: "Саудовская Аравия", type: "economy", title: "Aramco: снижение добычи", desc: "ОПЕК+ продлил сокращение.", sectors: ["Нефть ↑", "Aramco ↑"] },
+  { year: 2025, country: "США", type: "sanctions", title: "Трамп: тарифы на Китай", desc: "Тарифы до 60%.", sectors: ["Технологии ↓", "Китайские акции ↓"] },
+  { year: 2025, country: "США", type: "economy", title: "Nvidia — $5 трлн", desc: "Первая компания в истории.", sectors: ["Nvidia ↑", "ИИ ↑"] },
+  { year: 2025, country: "США", type: "economy", title: "ФРС снижает ставку до 3.5%", desc: "Рынки обновили максимумы.", sectors: ["Технологии ↑", "Банки ↑"] },
+  { year: 2025, country: "Иран", type: "war", title: "Конфликт Израиля и Ирана", desc: "Нефть выросла до $95.", sectors: ["Нефть ↑", "Золото ↑"] },
+  { year: 2025, country: "США", type: "economy", title: "Bitcoin $100,000", desc: "Трамп создал крипто-резерв.", sectors: ["Крипто ↑", "Банки ↑"] },
+  { year: 2025, country: "Китай", type: "economy", title: "Рост ВВП 4.5%", desc: "Самый медленный за десятилетие.", sectors: ["Акции Китая ↓", "Сырьё ↓"] },
+  { year: 2025, country: "Европа", type: "economy", title: "Энергетический кризис в Европе", desc: "Газ вырос в 3 раза.", sectors: ["Газ ↑", "Промышленность Европы ↓"] },
+  { year: 2025, country: "Япония", type: "economy", title: "Конец эры дешёвых денег", desc: "Ставка выросла до 1%.", sectors: ["Иена ↑", "Акции Японии ↓"] },
+  { year: 2025, country: "США", type: "disaster", title: "Пожары в Лос-Анджелесе", desc: "Ущерб $30 млрд.", sectors: ["Страхование ↓", "Коммунальные ↓"] },
+  { year: 2025, country: "Индия", type: "economy", title: "Индия: рост 7%", desc: "Самая быстрорастущая экономика.", sectors: ["Акции Индии ↑", "Технологии ↑"] },
+  { year: 2026, country: "США", type: "economy", title: "Nvidia — $6 трлн", desc: "Крупнейшая компания мира.", sectors: ["Nvidia ↑", "ИИ ↑"] },
+  { year: 2026, country: "США", type: "economy", title: "Apple: ИИ-революция в iPhone", desc: "Акции выросли на 20%.", sectors: ["Apple ↑", "Технологии ↑"] },
+  { year: 2026, country: "Китай", type: "economy", title: "Китай: дефляция", desc: "Цены падают. Стимулы не работают.", sectors: ["Акции Китая ↓", "Сырьё ↓"] },
+  { year: 2026, country: "США", type: "economy", title: "Bitcoin: $150,000", desc: "Новый максимум.", sectors: ["Крипто ↑", "Банки ↑"] },
+  { year: 2026, country: "Ближний Восток", type: "war", title: "Конфликт в Красном море", desc: "Атаки на суда. Нефть выросла.", sectors: ["Нефть ↑", "Логистика ↓"] },
+  { year: 2026, country: "США", type: "economy", title: "Microsoft — $4 трлн", desc: "Azure вырос на 40%.", sectors: ["Microsoft ↑", "Технологии ↑"] },
+  { year: 2026, country: "Европа", type: "economy", title: "ЕС: кризис энергетики", desc: "Газ вырос в 2 раза.", sectors: ["Газ ↑", "Промышленность Европы ↓"] },
+  { year: 2026, country: "Япония", type: "economy", title: "Ставка выросла до 1.5%", desc: "Рынки волатильны.", sectors: ["Иена ↑", "Акции Японии ↓"] },
+  { year: 2026, country: "США", type: "economy", title: "Tesla: роботакси", desc: "Запуск в 10 городах.", sectors: ["Tesla ↑", "Электромобили ↑"] },
+  { year: 2026, country: "Мир", type: "economy", title: "Глобальная рецессия", desc: "США, Европа, Китай замедляются.", sectors: ["Банки ↓", "Технологии ↓", "Золото ↑"] }
 ];
- 
-// ==========================================
-// РЕНДЕР И ПОИСК
-// ==========================================
 
+// ГРАФИК ЗОЛОТА
+const GOLD_DATA = [
+  { year: 2016, price: 1249 },
+  { year: 2017, price: 1258 },
+  { year: 2018, price: 1269 },
+  { year: 2019, price: 1393 },
+  { year: 2020, price: 1770 },
+  { year: 2021, price: 1800 },
+  { year: 2022, price: 1801 },
+  { year: 2023, price: 1943 },
+  { year: 2024, price: 2388 },
+  { year: 2025, price: 3442 },
+  { year: 2026, price: 4886 }
+];
+
+function drawGoldChart() {
+  const line = document.getElementById('gold-line');
+  if (!line) return;
+  const data = GOLD_DATA;
+  const min = Math.min(...data.map(d => d.price));
+  const max = Math.max(...data.map(d => d.price));
+  const range = max - min || 1;
+  const points = data.map((d, i) => {
+    const x = (i / (data.length - 1)) * 300;
+    const y = 100 - ((d.price - min) / range) * 80 - 10;
+    return `${x},${y}`;
+  }).join(' ');
+  line.setAttribute('points', points);
+  const trend = data[data.length - 1].price - data[0].price;
+  line.setAttribute('stroke', trend > 0 ? '#4ade80' : '#f87171');
+}
+
+drawGoldChart();
+
+// РЕНДЕР И ПОИСК
 const container = document.getElementById('events-container');
 const countBar = document.getElementById('count-bar');
 const searchInput = document.getElementById('search');
@@ -274,35 +255,23 @@ function escapeHtml(text) {
 
 function renderEvents(filter) {
   const query = (filter || "").toLowerCase().trim();
-  
-  // Фильтруем события
   const filtered = EVENTS.filter(ev => {
     if (!query) return true;
-    const haystack = [
-      ev.year, ev.country, ev.title, ev.desc, ev.type,
-      ...(ev.sectors || [])
-    ].join(" ").toLowerCase();
+    const haystack = [ev.year, ev.country, ev.title, ev.desc, ev.type].join(" ").toLowerCase();
     return haystack.includes(query);
   });
-  
-  // Сортируем: новые сверху
   filtered.sort((a, b) => b.year - a.year);
-  
   countBar.textContent = `Найдено событий: ${filtered.length} из ${EVENTS.length}`;
-  
   if (filtered.length === 0) {
-    container.innerHTML = '<div class="no-results">Ничего не найдено. Попробуй другой запрос.</div>';
+    container.innerHTML = '<div class="no-results">Ничего не найдено.</div>';
     return;
   }
-  
-  // Строим HTML
   let html = '';
   filtered.forEach(ev => {
     const sectorsHtml = (ev.sectors || []).map(s => {
       const cls = s.includes("↑") ? "up" : s.includes("↓") ? "down" : "";
       return `<span class="sector-tag ${cls}">${escapeHtml(s)}</span>`;
     }).join('');
-    
     html += `
       <div class="event-card">
         <div class="event-header">
@@ -318,11 +287,9 @@ function renderEvents(filter) {
       </div>
     `;
   });
-  
   container.innerHTML = html;
 }
 
-// Поиск с задержкой (чтобы не тормозить при вводе)
 let searchTimer = null;
 searchInput.addEventListener('input', (e) => {
   clearTimeout(searchTimer);
@@ -330,50 +297,7 @@ searchInput.addEventListener('input', (e) => {
     renderEvents(e.target.value);
   }, 150);
 });
- 
-// ==========================================
-// ГРАФИК ЗОЛОТА
-// ==========================================
 
-const GOLD_DATA = [
-  { year: 2016, price: 1249 },
-  { year: 2017, price: 1258 },
-  { year: 2018, price: 1269 },
-  { year: 2019, price: 1393 },
-  { year: 2020, price: 1770 },
-  { year: 2021, price: 1800 },
-  { year: 2022, price: 1801 },
-  { year: 2023, price: 1943 },
-  { year: 2024, price: 2388 },
-  { year: 2025, price: 3442 },
-  { year: 2026, price: 4886 }
-];
-
-function drawGoldChart() {
-  const line = document.getElementById('gold-line');
-  if (!line) return;
-  
-  const data = GOLD_DATA;
-  const min = Math.min(...data.map(d => d.price));
-  const max = Math.max(...data.map(d => d.price));
-  const range = max - min || 1;
-  
-  const points = data.map((d, i) => {
-    const x = (i / (data.length - 1)) * 300;
-    const y = 100 - ((d.price - min) / range) * 80 - 10;
-    return `${x},${y}`;
-  }).join(' ');
-  
-  line.setAttribute('points', points);
-  
-  // Цвет по тренду
-  const trend = data[data.length - 1].price - data[0].price;
-  line.setAttribute('stroke', trend > 0 ? '#4ade80' : '#f87171');
-}
-
-drawGoldChart();
-
-// Первый рендер
 renderEvents("");
 </script>
 </body>
