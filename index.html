@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>EventTrader — Глобальные события</title>
+<title>EventTrader — История событий</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
@@ -20,460 +20,190 @@
     top: 0;
     z-index: 10;
   }
-  .header h1 { font-size: 20px; font-weight: 600; letter-spacing: -0.5px; }
+  .header h1 { font-size: 20px; font-weight: 600; }
   .header h1 span { color: #4ade80; }
   .header p { font-size: 12px; color: #7d8da6; margin-top: 4px; }
-  .status-bar {
-    background: #1a2332;
-    padding: 8px 16px;
-    font-size: 11px;
-    color: #7d8da6;
-    text-align: center;
+  .search-bar {
+    padding: 12px 16px;
+    background: #0d1420;
     border-bottom: 1px solid #1f2a3a;
+    position: sticky;
+    top: 78px;
+    z-index: 9;
   }
+  .search-bar input {
+    width: 100%;
+    padding: 12px 16px;
+    background: #111827;
+    border: 1px solid #1f2a3a;
+    border-radius: 10px;
+    color: #e6edf3;
+    font-size: 14px;
+    outline: none;
+  }
+  .search-bar input:focus {
+    border-color: #4ade80;
+  }
+  .search-bar input::placeholder { color: #5a6a80; }
   .container { padding: 16px; }
-  .section-title {
+  .count-bar {
     font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
     color: #5a6a80;
     margin-bottom: 12px;
-    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
   }
-  .card {
+  .event-card {
     background: #111827;
     border: 1px solid #1f2a3a;
     border-radius: 12px;
     padding: 16px;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
   }
-  .card-header {
+  .event-card.hidden { display: none; }
+  .event-header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
   }
-  .event-type { font-size: 11px; color: #7d8da6; text-transform: uppercase; letter-spacing: 1px; }
-  .severity { font-size: 10px; padding: 3px 8px; border-radius: 20px; font-weight: 600; }
-  .sev-red { background: #7f1d1d; color: #fca5a5; }
-  .sev-orange { background: #78350f; color: #fcd34d; }
-  .sev-green { background: #14532d; color: #86efac; }
-  .event-title { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
-  .event-desc { font-size: 13px; color: #8b9bb4; line-height: 1.5; margin-bottom: 14px; }
-  .signals { display: flex; flex-direction: column; gap: 8px; }
-  .signal {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 12px;
-    background: #0d1420;
-    border-radius: 8px;
-    gap: 10px;
-  }
-  .signal-left { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
-  .signal-asset { font-size: 13px; font-weight: 500; }
-  .signal-ticker { font-size: 10px; color: #5a6a80; }
-  .signal-reason { font-size: 10px; color: #7d8da6; margin-top: 2px; }
-  .signal-price { font-size: 11px; color: #60a5fa; margin-top: 2px; font-weight: 500; }
-  .signal-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-  .signal-prob { display: flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; }
-  .up { color: #4ade80; }
-  .down { color: #f87171; }
-  .neutral { color: #94a3b8; }
-  .sparkline { display: block; }
-  .footer { text-align: center; padding: 24px 16px; font-size: 11px; color: #4a5568; line-height: 1.6; }
-  .loading { text-align: center; padding: 40px 16px; color: #7d8da6; font-size: 14px; }
-  .country-badge {
-    display: inline-block;
-    font-size: 9px;
+  .event-year {
+    font-size: 11px;
     background: #1e3a5f;
     color: #60a5fa;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-weight: 600;
+  }
+  .event-country {
+    font-size: 11px;
+    color: #7d8da6;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .event-title {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  .event-type {
+    display: inline-block;
+    font-size: 10px;
     padding: 2px 6px;
     border-radius: 4px;
-    margin-left: 6px;
+    margin-right: 6px;
   }
+  .type-sanctions { background: #7f1d1d; color: #fca5a5; }
+  .type-disaster { background: #78350f; color: #fcd34d; }
+  .type-war { background: #4c1d95; color: #c4b5fd; }
+  .type-economy { background: #14532d; color: #86efac; }
+  .event-impact {
+    font-size: 12px;
+    color: #8b9bb4;
+    line-height: 1.5;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid #1f2a3a;
+  }
+  .event-impact strong { color: #e6edf3; }
+  .event-sectors {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 8px;
+  }
+  .sector-tag {
+    font-size: 9px;
+    background: #0d1420;
+    color: #7d8da6;
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+  .sector-tag.up { color: #4ade80; }
+  .sector-tag.down { color: #f87171; }
+  .footer { text-align: center; padding: 24px 16px; font-size: 11px; color: #4a5568; line-height: 1.6; }
+  .no-results { text-align: center; padding: 40px 16px; color: #7d8da6; }
 </style>
 </head>
 <body>
 
 <div class="header">
   <h1>Event<span>Trader</span></h1>
-  <p>Глобальные события + реальные цены</p>
+  <p>100 событий за 10 лет, которые повлияли на рынки</p>
 </div>
 
-<div class="status-bar" id="status-bar">Загружаю...</div>
-
-<div class="container" id="events-container">
-  <div class="loading">Загружаю события...</div>
+<div class="search-bar">
+  <input type="text" id="search" placeholder="Поиск: год, страна, событие, компания...">
 </div>
+
+<div class="container" id="events-container"></div>
 
 <div class="footer">
-  Данные: GDACS + Finnhub + Twelve Data.<br>
+  Историческая база событий 2016–2026.<br>
   Не является инвестиционной рекомендацией.<br>
-  EventTrader v0.9.1
+  EventTrader v1.1
 </div>
 
 <script>
 // ==========================================
-// ОБЩИЕ АКТИВЫ
+// БАЗА СОБЫТИЙ (100 записей, 2016-2026)
 // ==========================================
+// Каждое событие: год, страна, тип, название, описание влияния, затронутые секторы
 
-const EVENT_ASSET_MAP = {
-  "EQ": { "gold": "Золото (XAU/USD)", "oil": "Нефть (Brent)", "insurance": "Страхование (сектор)" },
-  "TC": { "oil": "Нефть (Brent)", "gas": "Природный газ", "insurance": "Страхование (сектор)" },
-  "FL": { "agri": "Сельхоз. товары", "logistics": "Логистика (сектор)", "insurance": "Страхование (сектор)" },
-  "VO": { "airlines": "Авиаперевозки (сектор)", "gold": "Золото" },
-  "WF": { "timber": "Древесина", "agri": "Сельхоз. товары" },
-  "DR": { "wheat": "Пшеница", "corn": "Кукуруза", "cattle": "Скот (говядина)" }
-};
+const EVENTS = [
+  // ===== 2016 =====
+  { year: 2016, country: "США", type: "economy", title: "Брекзит (референдум в Великобритании)", desc: "Британский фунт упал на 8%, глобальные рынки потеряли $2 трлн за два дня. Инвесторы бежали в золото и гособлигации.", sectors: ["Золото ↑", "Финансы ↓", "Экспорт Великобритании ↓"] },
+  { year: 2016, country: "Китай", type: "economy", title: "Обвал фондового рынка Китая", desc: "Индекс Shanghai Composite потерял 40% с июня 2015. Введены механизмы остановки торгов. Влияние на сырьё и развивающиеся рынки.", sectors: ["Сырьё ↓", "Акции Китая ↓", "Развивающиеся рынки ↓"] },
+  { year: 2016, country: "США", type: "economy", title: "Решение ФРС о повышении ставки", desc: "Первое повышение ставки за 10 лет. Укрепление доллара, давление на развивающиеся рынки.", sectors: ["Банки ↑", "Развивающиеся рынки ↓", "Доллар ↑"] },
+  { year: 2016, country: "Япония", type: "economy", title: "Отрицательные ставки Банка Японии", desc: "Введение отрицательной ставки для стимулирования экономики. Иена укрепилась, несмотря на меры.", sectors: ["Банки Японии ↓", "Иена ↑", "Экспорт Японии ↓"] },
+  { year: 2016, country: "Италия", type: "economy", title: "Конституционный референдум в Италии", desc: "Отставка премьера Ренци. Банковский сектор Италии под давлением из-за плохих кредитов.", sectors: ["Банки Италии ↓", "Евро ↓", "Облигации Италии ↓"] },
+  { year: 2016, country: "США", type: "disaster", title: "Ураган Мэтью (Гаити, США)", desc: "Ураган 4 категории. Ущерб $4 млрд. Рост цен на стройматериалы и энергетику.", sectors: ["Стройматериалы ↑", "Страхование ↓", "Энергетика ↑"] },
+  { year: 2016, country: "Эквадор", type: "disaster", title: "Землетрясение в Эквадоре M7.8", desc: "Погибло 676 человек. Ущерб $3 млрд. Нефтяная инфраструктура затронута.", sectors: ["Нефть ↑", "Страхование ↓"] },
+  { year: 2016, country: "США", type: "war", title: "Алеппо — эвакуация", desc: "Геополитическая напряжённость. Рост цен на нефть и золото.", sectors: ["Нефть ↑", "Золото ↑"] },
+  { year: 2016, country: "Саудовская Аравия", type: "economy", title: "Саудовская Аравия: план Vision 2030", desc: "Диверсификация экономики. Влияние на нефтяные цены и IPO Saudi Aramco.", sectors: ["Нефть ↓", "Акции Saudi Aramco ↑"] },
+  { year: 2016, country: "Германия", type: "economy", title: "Deutsche Bank — кризис", desc: "Крупнейший банк Германии под давлением. Кризис доверия к европейским банкам.", sectors: ["Банки Европы ↓", "Акции DB ↓"] },
 
-const DIRECTION_RULES = {
-  "EQ": { "gold": { dir: "up", baseProb: 70 }, "oil": { dir: "up", baseProb: 55 }, "insurance": { dir: "down", baseProb: 60 } },
-  "TC": { "oil": { dir: "up", baseProb: 65 }, "gas": { dir: "up", baseProb: 55 }, "insurance": { dir: "down", baseProb: 60 } },
-  "FL": { "agri": { dir: "up", baseProb: 68 }, "logistics": { dir: "down", baseProb: 55 }, "insurance": { dir: "down", baseProb: 58 } },
-  "VO": { "airlines": { dir: "down", baseProb: 72 }, "gold": { dir: "up", baseProb: 48 } },
-  "WF": { "timber": { dir: "up", baseProb: 58 }, "agri": { dir: "up", baseProb: 45 } },
-  "DR": { "wheat": { dir: "up", baseProb: 64 }, "corn": { dir: "up", baseProb: 60 }, "cattle": { dir: "up", baseProb: 50 } }
-};
+  // ===== 2017 =====
+  { year: 2017, country: "США", type: "economy", title: "Налоговая реформа Трампа", desc: "Снижение корпоративного налога с 35% до 21%. Рост прибыли компаний. Банки и промышленность выиграли.", sectors: ["Банки ↑", "Промышленность ↑", "Технологии ↑"] },
+  { year: 2017, country: "США", type: "economy", title: "Bitcoin — первый крупный рост", desc: "Цена выросла с $1000 до $20,000. Интерес к криптовалютам. Крипто-компании взлетели.", sectors: ["Крипто ↑", "Банки ↓", "Регуляторы ↑"] },
+  { year: 2017, country: "Катар", type: "war", title: "Блокада Катара", desc: "Саудовская Аравия и ОАЭ ввели блокаду. Газ и нефть — волатильность.", sectors: ["Газ ↑", "Нефть ↑", "Авиация ↓"] },
+  { year: 2017, country: "США", type: "disaster", title: "Ураганы Харви, Ирма, Мария", desc: "Ущерб $300 млрд. Рекордные страховые выплаты. Рост цен на бензин.", sectors: ["Нефть ↑", "Страхование ↓", "Стройматериалы ↑"] },
+  { year: 2017, country: "Мексика", type: "disaster", title: "Землетрясение в Мексике M7.1", desc: "Погибло 370 человек. Ущерб $8 млрд.", sectors: ["Страхование ↓", "Песо ↓"] },
+  { year: 2017, country: "Северная Корея", type: "war", title: "Ядерные испытания КНДР", desc: "Рост геополитической напряжённости. Золото и иена как убежище.", sectors: ["Золото ↑", "Иена ↑", "Акции Кореи ↓"] },
+  { year: 2017, country: "Испания", type: "war", title: "Референдум в Каталонии", desc: "Политический кризис. Евро под давлением. Акции испанских банков упали.", sectors: ["Евро ↓", "Банки Испании ↓", "Облигации Испании ↓"] },
+  { year: 2017, country: "Китай", type: "economy", title: "Китай: рост долга и теневой банкинг", desc: "Ограничения на вывоз капитала. Давление на рынки.", sectors: ["Акции Китая ↓", "Сырьё ↓"] },
+  { year: 2017, country: "Великобритания", type: "economy", title: "Brexit: начало переговоров", desc: "Фунт под давлением. Компании переносят штаб-квартиры в ЕС.", sectors: ["Фунт ↓", "Недвижимость Лондона ↓"] },
+  { year: 2017, country: "Саудовская Аравия", type: "economy", title: "Антикоррупционная чистка", desc: "Задержаны принцы и бизнесмены. Нефтяные рынки волатильны.", sectors: ["Нефть ↑", "Акции Саудовской Аравии ↓"] },
 
-// ==========================================
-// КОМПАНИИ ПО СТРАНАМ
-// ==========================================
+  // ===== 2018 =====
+  { year: 2018, country: "США", type: "war", title: "Торговая война США-Китай", desc: "Тарифы на $250 млрд китайских товаров. Пострадали технологические компании.", sectors: ["Технологии ↓", "Сельхоз США ↓", "Китайские акции ↓"] },
+  { year: 2018, country: "США", type: "economy", title: "ФРС: 4 повышения ставки", desc: "Ставка выросла до 2.5%. Рынки упали в декабре. S&P 500 потерял 6.2% за месяц.", sectors: ["Банки ↑", "Технологии ↓", "Недвижимость ↓"] },
+  { year: 2018, country: "США", type: "war", title: "Санкции против Ирана (выход из JCPOA)", desc: "Трамп вышел из ядерной сделки. Введены санкции на нефть. Нефть выросла до $85.", sectors: ["Нефть ↑", "Авиация ↓", "Энергетика ↑"] },
+  { year: 2018, country: "Турция", type: "economy", title: "Турецкий лира — кризис", desc: "Лира упала на 40%. Инфляция 25%. Влияние на европейские банки.", sectors: ["Лира ↓", "Банки Европы ↓", "Туризм ↓"] },
+  { year: 2018, country: "Аргентина", type: "economy", title: "Валютный кризис в Аргентине", desc: "Песо упал на 50%. МВФ выделил $57 млрд. Рынки в панике.", sectors: ["Песо ↓", "Облигации Аргентины ↓"] },
+  { year: 2018, country: "Индонезия", type: "disaster", title: "Землетрясение и цунами в Сулавеси", desc: "Погибло 4300 человек. Ущерб $900 млн.", sectors: ["Страхование ↓", "Сырьё ↑"] },
+  { year: 2018, country: "США", type: "disaster", title: "Лесные пожары в Калифорнии (Camp Fire)", desc: "Ущерб $16.5 млрд. PG&E обанкротилась. Акции коммунальных компаний упали.", sectors: ["Коммунальные ↓", "Страхование ↓", "Энергетика ↓"] },
+  { year: 2018, country: "Япония", type: "disaster", title: "Землетрясение в Осаке M6.1", desc: "Погибло 5 человек. Ущерб $2 млрд. Заводы остановлены.", sectors: ["Автопром ↓", "Электроника ↓"] },
+  { year: 2018, country: "Германия", type: "economy", title: "Дизельный скандал (Volkswagen)", desc: "Volkswagen оштрафован на $1 млрд. Акции автопрома под давлением.", sectors: ["Автопром ↓", "Экология ↑"] },
+  { year: 2018, country: "Саудовская Аравия", type: "war", title: "Убийство Хашогги", desc: "Кризис в отношениях с Западом. Давление на Saudi Aramco.", sectors: ["Нефть ↑", "Акции Саудовской Аравии ↓"] },
 
-const COMPANY_RULES = {
-  "FL": [
-    {
-      country: "india",
-      countryName: "🇮🇳 Индия",
-      companies: [
-        { name: "Supreme Petrochem", ticker: "SPLPETRO.NS", dir: "down", prob: 78, reason: "Завод в Ченнаи остановлен" }
-      ]
-    },
-    {
-      country: "germany",
-      countryName: "🇩🇪 Германия",
-      companies: [
-        { name: "Siemens", ticker: "SIE.DE", dir: "down", prob: 68, reason: "Заводы в зоне затопления" },
-        { name: "Volkswagen", ticker: "VOW3.DE", dir: "down", prob: 62, reason: "Приостановка конвейеров" }
-      ]
-    },
-    {
-      country: "france",
-      countryName: "🇫🇷 Франция",
-      companies: [
-        { name: "TotalEnergies", ticker: "TTE.PA", dir: "up", prob: 55, reason: "Перебои поставок нефти" }
-      ]
-    },
-    {
-      country: "england",
-      countryName: "🇬🇧 Великобритания",
-      companies: [
-        { name: "Shell", ticker: "SHEL.L", dir: "up", prob: 58, reason: "Рост цен на энергоносители" }
-      ]
-    }
-  ],
-  "EQ": [
-    {
-      country: "japan",
-      countryName: "🇯🇵 Япония",
-      companies: [
-        { name: "Mitsui Kinzoku", ticker: "5706.T", dir: "down", prob: 75, reason: "Завод повреждён" },
-        { name: "Kioxia", ticker: "285A.T", dir: "down", prob: 70, reason: "Остановка NAND" }
-      ]
-    },
-    {
-      country: "saudi",
-      countryName: "🇸🇦 Саудовская Аравия",
-      companies: [
-        { name: "Saudi Aramco", ticker: "2222.SR", dir: "up", prob: 60, reason: "Рост цен на нефть" }
-      ]
-    }
-  ],
-  "TC": [
-    {
-      country: "usa",
-      countryName: "🇺🇸 США",
-      companies: [
-        { name: "Quanta Services", ticker: "PWR", dir: "up", prob: 72, reason: "Восстановление сетей" },
-        { name: "Energizer", ticker: "ENR", dir: "up", prob: 68, reason: "Спрос на батарейки" }
-      ]
-    }
-  ]
-};
+  // ===== 2019 =====
+  { year: 2019, country: "США", type: "war", title: "Санкции против Huawei", desc: "Запрет на поставки чипов. Пострадали американские поставщики. TSMC выиграла.", sectors: ["Полупроводники ↓", "Huawei ↓", "TSMC ↑"] },
+  { year: 2019, country: "США", type: "economy", title: "Инверсия кривой доходности", desc: "Сигнал рецессии. Рынки упали. ФРС снизила ставку.", sectors: ["Банки ↓", "Облигации ↑", "Золото ↑"] },
+  { year: 2019, country: "США", type: "economy", title: "ФРС: снижение ставки", desc: "Три снижения за год. Рынки выросли. Технологии взлетели.", sectors: ["Технологии ↑", "Банки ↓", "Золото ↑"] },
+  { year: 2019, country: "США", type: "economy", title: "IPO Saudi Aramco", desc: "Крупнейшее IPO в истории — $25.6 млрд. Оценка $1.7 трлн.", sectors: ["Нефть ↑", "Акции Saudi Aramco ↑"] },
+  { year: 2019, country: "Китай", type: "economy", title: "Китай: замедление роста до 6%", desc: "Самый медленный рост за 30 лет. Влияние на сырьё и экспортёров.", sectors: ["Сырьё ↓", "Акции Китая ↓", "Австралия ↓"] },
+  { year: 2019, country: "Япония", type: "economy", title: "Повышение налога с 8% до 10%", desc: "Удар по потребительским расходам. Экономика сократилась.", sectors: ["Ритейл ↓", "Потребительские ↓"] },
+  { year: 2019, country: "США", type: "war", title: "Убийство Сулеймани", desc: "Иранский генерал убит в Багдаде. Нефть выросла на 4%. Золото ↑.", sectors: ["Нефть ↑", "Золото ↑", "Авиация ↓"] },
+  { year: 2019, country: "Австралия", type: "disaster", title: "Лесные пожары в Австралии", desc: "Ущерб $100 млрд. Погибло 1 млрд животных. Влияние на туризм и сырьё.", sectors: ["Туризм ↓", "Сырьё ↑", "Страхование ↓"] },
+  { year: 2019, country: "Индия", type: "economy", title: "Индия: отмена 500 и 2000 рупий", desc: "Демонетизация ударила по малому бизнесу. Рост замедлился.", sectors: ["Банки Индии ↓", "Ритейл ↓"] },
+  { year: 2019, country: "Венесуэла", type: "war", title: "Санкции США против Венесуэлы", desc: "Нефтяное эмбарго. PDVSA под санкциями. Нефть выросла.", sectors: ["Нефть ↑", "Акции Венесуэлы ↓"] },
 
-function matchCompanies(eventType, description) {
-  const rules = COMPANY_RULES[eventType];
-  if (!rules) return [];
-  const desc = (description || "").toLowerCase();
-  const matched = [];
-  rules.forEach(rule => {
-    if (desc.includes(rule.country)) matched.push(rule);
-  });
-  return matched;
-}
-
-// ==========================================
-// ЦЕНЫ
-// ==========================================
-
-const FINNHUB_FN = "/.netlify/functions/finnhub";
-const TWELVEDATA_FN = "/.netlify/functions/twelvedata";
-
-function isUSStock(ticker) {
-  if (!ticker || ticker === "—") return false;
-  return !ticker.includes(".");
-}
-
-async function fetchPrice(ticker) {
-  if (!ticker || ticker === "—") return null;
-  
-  if (isUSStock(ticker)) {
-    try {
-      const res = await fetch(`${FINNHUB_FN}?symbol=${encodeURIComponent(ticker)}`);
-      const data = await res.json();
-      if (data.c && data.c > 0) {
-        return { price: data.c, change: data.d, changePercent: data.dp };
-      }
-    } catch (e) { /* ignore */ }
-  }
-  
-  // Twelve Data — только текущая цена (2 точки: сегодня и вчера)
-  try {
-    const res = await fetch(`${TWELVEDATA_FN}?symbol=${encodeURIComponent(ticker)}&outputsize=2`);
-    const data = await res.json();
-    if (data.values && data.values.length >= 2) {
-      const current = parseFloat(data.values[0].close);
-      const prev = parseFloat(data.values[1].close);
-      const change = current - prev;
-      const changePercent = (change / prev) * 100;
-      return { price: current, change, changePercent };
-    }
-  } catch (e) { /* ignore */ }
-  
-  return null;
-}
-
-// ==========================================
-// ГРАФИКИ
-// ==========================================
-
-function drawFlatLine(canvas, dir) {
-  const ctx = canvas.getContext('2d');
-  const dpr = window.devicePixelRatio || 1;
-  const w = canvas.clientWidth;
-  const h = canvas.clientHeight;
-  canvas.width = w * dpr;
-  canvas.height = h * dpr;
-  ctx.scale(dpr, dpr);
-  
-  const color = dir === 'up' ? '#4ade80' : dir === 'down' ? '#f87171' : '#94a3b8';
-  ctx.beginPath();
-  ctx.moveTo(0, h / 2);
-  ctx.lineTo(w, h / 2);
-  ctx.strokeStyle = color + '60';
-  ctx.lineWidth = 1;
-  ctx.stroke();
-}
-
-function createSparkline(dir, width = 70, height = 28) {
-  const canvas = document.createElement('canvas');
-  canvas.className = 'sparkline';
-  canvas.style.width = width + 'px';
-  canvas.style.height = height + 'px';
-  requestAnimationFrame(() => drawFlatLine(canvas, dir));
-  return canvas;
-}
-
-// ==========================================
-// РЕНДЕР
-// ==========================================
-
-const container = document.getElementById("events-container");
-const statusBar = document.getElementById("status-bar");
-
-const typeNames = {
-  "EQ": "🌍 Землетрясение", "TC": "🌀 Циклон", "FL": "🌊 Наводнение",
-  "VO": "🌋 Вулкан", "WF": "🔥 Пожар", "DR": "☀️ Засуха"
-};
-
-const alertNames = {
-  "Red": { label: "Высокая", cls: "sev-red" },
-  "Orange": { label: "Средняя", cls: "sev-orange" },
-  "Green": { label: "Низкая", cls: "sev-green" }
-};
-
-function formatDate(d) {
-  if (!d) return "—";
-  return new Date(d).toLocaleString("ru-RU", {
-    day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit"
-  });
-}
-
-function renderSignal(assetName, ticker, dir, prob, reason, priceData) {
-  const arrow = dir === "up" ? "↑" : dir === "down" ? "↓" : "→";
-  const cls = dir === "up" ? "up" : dir === "down" ? "down" : "neutral";
-  const dirText = dir === "up" ? "Рост" : dir === "down" ? "Падение" : "Нейтр.";
-  
-  const signal = document.createElement('div');
-  signal.className = 'signal';
-  
-  const left = document.createElement('div');
-  left.className = 'signal-left';
-  
-  let priceHtml = "";
-  if (priceData) {
-    const changeSign = priceData.changePercent > 0 ? "+" : "";
-    const changeClass = priceData.changePercent > 0 ? "up" : "down";
-    priceHtml = `<span class="signal-price">$${priceData.price.toFixed(2)} <span class="${changeClass}">${changeSign}${priceData.changePercent.toFixed(2)}%</span></span>`;
-  }
-  
-  left.innerHTML = `
-    <span class="signal-asset">${assetName}${ticker && ticker !== "—" ? `<span class="signal-ticker"> ${ticker}</span>` : ""}</span>
-    ${priceHtml}
-    ${reason ? `<span class="signal-reason">${reason}</span>` : ""}
-  `;
-  
-  const right = document.createElement('div');
-  right.className = 'signal-right';
-  
-  const sparkline = createSparkline(dir);
-  right.appendChild(sparkline);
-  
-  const probEl = document.createElement('span');
-  probEl.className = `signal-prob ${cls}`;
-  probEl.textContent = `${arrow} ${dirText} ${Math.round(prob)}%`;
-  right.appendChild(probEl);
-  
-  signal.appendChild(left);
-  signal.appendChild(right);
-  return signal;
-}
-
-async function renderCard(event) {
-  const type = event.eventtype || "UNKNOWN";
-  const typeName = typeNames[type] || type;
-  const title = event.name || event.description || "Событие";
-  const alert = event.alertlevel || "Green";
-  const alertInfo = alertNames[alert] || alertNames.Green;
-  const country = event.country || "";
-  const date = formatDate(event.todate || event.fromdate);
-  
-  let desc = event.description || event.htmldescription || "";
-  desc = desc.replace(/<[^>]*>/g, "");
-  if (desc.length > 250) desc = desc.substring(0, 250) + "...";
-  
-  const card = document.createElement('div');
-  card.className = 'card';
-  card.innerHTML = `
-    <div class="card-header">
-      <div>
-        <div class="event-type">${typeName}</div>
-        <div class="event-title">${title}</div>
-      </div>
-      <span class="severity ${alertInfo.cls}">${alertInfo.label}</span>
-    </div>
-    <div class="event-desc">
-      ${desc || "Описание недоступно."}
-      <br><small style="color:#5a6a80">${country ? country + " • " : ""}${date}</small>
-    </div>
-    <div class="signals"></div>
-  `;
-  
-  const signalsContainer = card.querySelector('.signals');
-  
-  // Общие активы (без цен — просто сигналы)
-  const assets = EVENT_ASSET_MAP[type] || {};
-  const rules = DIRECTION_RULES[type] || {};
-  Object.keys(assets).forEach(assetKey => {
-    const assetName = assets[assetKey];
-    const rule = rules[assetKey] || { dir: "down", baseProb: 40 };
-    signalsContainer.appendChild(
-      renderSignal(assetName, null, rule.dir, rule.baseProb, null, null)
-    );
-  });
-  
-  // Компании
-  const groups = matchCompanies(type, desc + " " + country);
-  for (const group of groups) {
-    const titleEl = document.createElement('div');
-    titleEl.className = 'section-title';
-    titleEl.style.marginTop = '14px';
-    titleEl.style.marginBottom = '8px';
-    titleEl.innerHTML = `Конкретные компании <span class="country-badge">${group.countryName}</span>`;
-    signalsContainer.appendChild(titleEl);
-    
-    for (const c of group.companies) {
-      const priceData = await fetchPrice(c.ticker);
-      signalsContainer.appendChild(
-        renderSignal(c.name, c.ticker, c.dir, c.prob, c.reason, priceData)
-      );
-      await new Promise(r => setTimeout(r, 200));
-    }
-  }
-  
-  return card;
-}
-
-// ==========================================
-// ЗАГРУЗКА
-// ==========================================
-
-const FALLBACK_EVENTS = [
-  {
-    eventtype: "FL", name: "Наводнение в Германии", alertlevel: "Red",
-    description: "Масштабные наводнения в Баварии.", country: "Germany"
-  },
-  {
-    eventtype: "EQ", name: "Землетрясение M6.8 — Япония", alertlevel: "Red",
-    description: "Сильное землетрясение у побережья.", country: "Japan"
-  }
-];
-
-async function loadEvents() {
-  let eventsToShow = [];
-  let dataSource = 'GDACS';
-
-  statusBar.textContent = "Загружаю события...";
-
-  try {
-    const today = new Date();
-    const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
-    const from = yesterday.toISOString().split("T")[0];
-    const to = today.toISOString().split("T")[0];
-    const url = `https://www.gdacs.org/gdacsapi/api/events/geteventlist/SEARCH?eventlist=EQ;TC;FL;VO;WF;DR&fromdate=${from}&todate=${to}`;
-
-    const response = await fetch(url);
-    if (!response.ok) throw new Error(`GDACS: ${response.status}`);
-    const data = await response.json();
-    if (data.features && data.features.length > 0) {
-      eventsToShow = data.features.map(ev => ev.properties || ev);
-    } else {
-      throw new Error("Пустой список");
-    }
-  } catch (e) {
-    dataSource = 'Резервные данные';
-    eventsToShow = FALLBACK_EVENTS;
-  }
-
-  statusBar.textContent = `Источник: ${dataSource}. Загружаю цены...`;
-
-  container.innerHTML = '';
-  
-  const titleEl = document.createElement('div');
-  titleEl.className = 'section-title';
-  titleEl.textContent = `События за 24 часа (${dataSource})`;
-  container.appendChild(titleEl);
-  
-  for (const ev of eventsToShow.slice(0, 2)) {
-    const card = await renderCard(ev);
-    container.appendChild(card);
-  }
-  
-  statusBar.textContent = `Готово. Источник: ${dataSource}`;
-}
-
-loadEvents();
-</script>
-
-</body>
-</html>
+  // ===== 2020 =====
+  { year: 2020, country: "Китай", type: "disaster", title: "COVID-19 — вспышка в Ухане", desc: "Пандемия. Глобальные рынки упали на 30%. ФРС и центробанки влили $10 трлн.", sectors: ["Авиация ↓", "Туризм ↓", "Технологии ↑", "Здравоохранение ↑"] },
+  { year: 2020, country: "США", type: "economy", title: "ФРС: ставка до 0%", desc: "Экстренное снижение. QE бесконечный. Рынки отскочили.", sectors: ["Технологии ↑", "Банки ↓", "Золото ↑"] },
+  { year: 2020, country: "США", type: "economy", title: "Нефть WTI — отрицательные цены", desc: "Впервые в истории нефть стоила -$37. Переизбыток предложения.", sectors: ["Нефть ↓", "Энергетика ↓", "Авиация ↓"] },
+  { year: 2020, country: "США", type: "economy", title: "Tesla: рост в 7 раз", desc: "Акции Tesla выросли с $85 до $700. Включение в S&P 500.", sectors: ["Tesla ↑", "Электромобили ↑"] },
+  { year: 2020, country: "США", type: "economy", title: "Bitcoin: институциональный интерес", desc: "MicroStrategy и Tesla купили BTC. Цена выросла до $29,000.", sectors: ["Крипто ↑", "Банки ↑"] },
+  { year: 2020, country: "США", type: "disaster", title: "Лесные пожары на Западе США", desc: "Рекордные пожары. Ущерб $20 млрд. PG&E снова под ударом.", sectors: ["Коммунальные ↓", "Страхование ↓"] },
+  { year: 2020, country: "Турция", type: "disaster", title: "Землетрясение в Измире M7.0", desc: "Погибло 117 человек. Ущерб $400 млн.", sectors: ["Страхование ↓", "Ли
