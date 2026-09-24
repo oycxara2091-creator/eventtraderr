@@ -536,48 +536,34 @@ function renderCompanies() {
   grid.innerHTML = html;
 }
 
-// СТРАНИЦА КОМПАНИИ
-function showCompany(index) {
-  const c = COMPANIES[index];
-  if (!c) return;
-  
-  const content = document.getElementById('company-page-content');
-  
-  let html = '';
-  html += '<div class="cp-logo" style="background:' + c.color + '">' + c.letter + '</div>';
-  html += '<div class="cp-name">' + c.name + '</div>';
-  html += '<div class="cp-ticker">' + c.ticker + ' • ' + c.sector + '</div>';
-  
-  html += '<div class="cp-section">';
-  html += '<div class="cp-section-title">Характеристики</div>';
-  html += '<div class="cp-row"><span class="cp-label">Капитализация</span><span class="cp-value">' + c.cap + '</span></div>';
-  html += '<div class="cp-row"><span class="cp-label">Основатель</span><span class="cp-value">' + c.founder + '</span></div>';
-  html += '<div class="cp-row"><span class="cp-label">Год основания</span><span class="cp-value">' + c.founded + '</span></div>';
-  html += '<div class="cp-row"><span class="cp-label">Штаб-квартира</span><span class="cp-value">' + c.hq + '</span></div>';
-  html += '</div>';
-  
-  html += '<div class="cp-section">';
-  html += '<div class="cp-section-title">О компании</div>';
-  html += '<div class="cp-about">' + c.about + '</div>';
-  html += '</div>';
-  
-  html += '<div class="cp-section">';
-  html += '<div class="cp-section-title">Что производит</div>';
-  html += '<div class="cp-about">' + c.products + '</div>';
-  html += '</div>';
-  
-  content.innerHTML = html;
-  
-  // Скрываем главную, показываем страницу
-  document.querySelector('.header').style.display = 'none';
-  document.querySelector('.search-bar').style.display = 'none';
-  document.querySelector('.container').style.display = 'none';
-  document.getElementById('company-page').style.display = 'block';
-  
-  window.scrollTo(0, 0);
-}
+document.querySelectorAll('.company-card').forEach(card => {
+  card.addEventListener('click', () => {
+    const i = parseInt(card.getAttribute('data-index'));
+    const c = COMPANIES[i];
+    if (!c) return;
+    
+    const content = document.getElementById('company-page-content');
+    content.innerHTML = 
+      '<div class="cp-logo" style="background:' + c.color + '">' + c.letter + '</div>' +
+      '<div class="cp-name">' + c.name + '</div>' +
+      '<div class="cp-ticker">' + c.ticker + ' • ' + c.sector + '</div>' +
+      '<div class="cp-section"><div class="cp-section-title">Характеристики</div>' +
+        '<div class="cp-row"><span class="cp-label">Капитализация</span><span class="cp-value">' + c.cap + '</span></div>' +
+        '<div class="cp-row"><span class="cp-label">Основатель</span><span class="cp-value">' + c.founder + '</span></div>' +
+        '<div class="cp-row"><span class="cp-label">Год основания</span><span class="cp-value">' + c.founded + '</span></div>' +
+        '<div class="cp-row"><span class="cp-label">Штаб-квартира</span><span class="cp-value">' + c.hq + '</span></div>' +
+      '</div>' +
+      '<div class="cp-section"><div class="cp-section-title">О компании</div><div class="cp-about">' + c.about + '</div></div>' +
+      '<div class="cp-section"><div class="cp-section-title">Что производит</div><div class="cp-about">' + c.products + '</div></div>';
+    
+    document.querySelector('.header').style.display = 'none';
+    document.querySelector('.search-bar').style.display = 'none';
+    document.querySelector('.container').style.display = 'none';
+    document.getElementById('company-page').style.display = 'block';
+    window.scrollTo(0, 0);
+  });
+});
 
-// Кнопка "Назад"
 document.getElementById('back-btn').addEventListener('click', () => {
   document.getElementById('company-page').style.display = 'none';
   document.querySelector('.header').style.display = '';
@@ -585,17 +571,43 @@ document.getElementById('back-btn').addEventListener('click', () => {
   document.querySelector('.container').style.display = '';
   window.scrollTo(0, 0);
 });
+
  renderCompanies();renderEvents("");
- // Обработчики кликов на карточки
+
 document.querySelectorAll('.company-card').forEach(card => {
-  console.log('Карточка найдена:', card);
   card.addEventListener('click', () => {
-    const index = parseInt(card.getAttribute('data-index'));
-    try {
-  showCompany(index);
-} catch(e) {
-  alert('Ошибка: ' + e.message);
-    }
+    const i = parseInt(card.getAttribute('data-index'));
+    const c = COMPANIES[i];
+    if (!c) return;
+    
+    const content = document.getElementById('company-page-content');
+    content.innerHTML = 
+      '<div class="cp-logo" style="background:' + c.color + '">' + c.letter + '</div>' +
+      '<div class="cp-name">' + c.name + '</div>' +
+      '<div class="cp-ticker">' + c.ticker + ' • ' + c.sector + '</div>' +
+      '<div class="cp-section"><div class="cp-section-title">Характеристики</div>' +
+        '<div class="cp-row"><span class="cp-label">Капитализация</span><span class="cp-value">' + c.cap + '</span></div>' +
+        '<div class="cp-row"><span class="cp-label">Основатель</span><span class="cp-value">' + c.founder + '</span></div>' +
+        '<div class="cp-row"><span class="cp-label">Год основания</span><span class="cp-value">' + c.founded + '</span></div>' +
+        '<div class="cp-row"><span class="cp-label">Штаб-квартира</span><span class="cp-value">' + c.hq + '</span></div>' +
+      '</div>' +
+      '<div class="cp-section"><div class="cp-section-title">О компании</div><div class="cp-about">' + c.about + '</div></div>' +
+      '<div class="cp-section"><div class="cp-section-title">Что производит</div><div class="cp-about">' + c.products + '</div></div>';
+    
+    document.querySelector('.header').style.display = 'none';
+    document.querySelector('.search-bar').style.display = 'none';
+    document.querySelector('.container').style.display = 'none';
+    document.getElementById('company-page').style.display = 'block';
+    window.scrollTo(0, 0);
+  });
+});
+
+document.getElementById('back-btn').addEventListener('click', () => {
+  document.getElementById('company-page').style.display = 'none';
+  document.querySelector('.header').style.display = '';
+  document.querySelector('.search-bar').style.display = '';
+  document.querySelector('.container').style.display = '';
+  window.scrollTo(0, 0);
 });
 </script>
 </body>
