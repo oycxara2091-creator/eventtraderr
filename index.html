@@ -588,10 +588,14 @@ document.getElementById('back-btn').addEventListener('click', () => {
  renderCompanies();renderEvents("");
  // Обработчики кликов на карточки
 document.querySelectorAll('.company-card').forEach(card => {
+  console.log('Карточка найдена:', card);
   card.addEventListener('click', () => {
     const index = parseInt(card.getAttribute('data-index'));
-    showCompany(index);
-  });
+    try {
+  showCompany(index);
+} catch(e) {
+  alert('Ошибка: ' + e.message);
+    }
 });
 </script>
 </body>
