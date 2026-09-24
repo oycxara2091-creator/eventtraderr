@@ -577,14 +577,6 @@ function showCompany(index) {
   window.scrollTo(0, 0);
 }
 
-// Обработчики кликов на карточки
-document.querySelectorAll('.company-card').forEach(card => {
-  card.addEventListener('click', () => {
-    const index = parseInt(card.getAttribute('data-index'));
-    showCompany(index);
-  });
-});
-
 // Кнопка "Назад"
 document.getElementById('back-btn').addEventListener('click', () => {
   document.getElementById('company-page').style.display = 'none';
@@ -594,6 +586,13 @@ document.getElementById('back-btn').addEventListener('click', () => {
   window.scrollTo(0, 0);
 });
  renderCompanies();renderEvents("");
+ // Обработчики кликов на карточки
+document.querySelectorAll('.company-card').forEach(card => {
+  card.addEventListener('click', () => {
+    const index = parseInt(card.getAttribute('data-index'));
+    showCompany(index);
+  });
+});
 </script>
 </body>
 </html>
