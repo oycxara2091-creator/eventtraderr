@@ -44,6 +44,61 @@
   .sector-tag.up { color: #4ade80; }
   .sector-tag.down { color: #f87171; }
   .no-results { text-align: center; padding: 40px 16px; color: #7d8da6; }
+ .companies-section {
+  margin-bottom: 16px;
+}
+.companies-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+.company-card {
+  background: #111827;
+  border: 1px solid #1f2a3a;
+  border-radius: 12px;
+  padding: 14px;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+.company-card:active {
+  border-color: #4ade80;
+}
+.company-logo {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 8px;
+}
+.company-name {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+.company-ticker {
+  font-size: 10px;
+  color: #5a6a80;
+  margin-bottom: 6px;
+}
+.company-sector {
+  display: inline-block;
+  font-size: 9px;
+  background: #1e3a5f;
+  color: #60a5fa;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-bottom: 6px;
+}
+.company-cap {
+  font-size: 11px;
+  color: #4ade80;
+  font-weight: 600;
+}
   .footer { text-align: center; padding: 24px 16px; font-size: 11px; color: #4a5568; line-height: 1.6; }
 </style>
 </head>
@@ -343,7 +398,59 @@ searchInput.addEventListener('input', (e) => {
   }, 150);
 });
 
-renderEvents("");
+
+// ДАННЫЕ КОМПАНИЙ
+const COMPANIES = [
+  { name: "NVIDIA", ticker: "NVDA", sector: "Полупроводники", cap: "$5.0T", color: "#76b900", letter: "N",
+    founder: "Дженсен Хуанг", founded: 1993, hq: "Санта-Клара, США",
+    about: "Производит GPU, чипы для ИИ и дата-центров.", products: "GeForce, RTX, A100, H100, CUDA" },
+  { name: "Apple", ticker: "AAPL", sector: "Технологии", cap: "$4.3T", color: "#555555", letter: "A",
+    founder: "Стив Джобс, Стив Возняк", founded: 1976, hq: "Купертино, США",
+    about: "Производит iPhone, Mac, iPad, носимые устройства.", products: "iPhone, Mac, iPad, Watch, AirPods" },
+  { name: "Microsoft", ticker: "MSFT", sector: "Технологии", cap: "$2.9T", color: "#00a4ef", letter: "M",
+    founder: "Билл Гейтс, Пол Аллен", founded: 1975, hq: "Редмонд, США",
+    about: "Разрабатывает Windows, Office, Azure, Xbox.", products: "Windows, Office, Azure, Xbox" },
+  { name: "Alphabet", ticker: "GOOGL", sector: "Интернет", cap: "$4.2T", color: "#4285f4", letter: "G",
+    founder: "Ларри Пейдж, Сергей Брин", founded: 1998, hq: "Маунтин-Вью, США",
+    about: "Управляет Google, YouTube, Android, Waymo.", products: "Google, YouTube, Android, Waymo" },
+  { name: "Amazon", ticker: "AMZN", sector: "E-commerce", cap: "$2.5T", color: "#ff9900", letter: "A",
+    founder: "Джефф Безос", founded: 1995, hq: "Сиэтл, США",
+    about: "E-commerce, AWS, логистика, стриминг.", products: "Amazon.com, AWS, Prime, Alexa" },
+  { name: "Meta", ticker: "META", sector: "Соцсети", cap: "$1.8T", color: "#0668e1", letter: "M",
+    founder: "Марк Цукерберг", founded: 2004, hq: "Менло-Парк, США",
+    about: "Социальные сети, ИИ, VR.", products: "Facebook, Instagram, WhatsApp, Oculus" },
+  { name: "Tesla", ticker: "TSLA", sector: "Автопром", cap: "$1.4T", color: "#e82127", letter: "T",
+    founder: "Мартин Эберхард, Марк Тарпеннинг", founded: 2003, hq: "Остин, США",
+    about: "Электромобили, энергетика, ИИ, робототехника.", products: "Model S, 3, X, Y, Cybertruck, Powerwall" },
+  { name: "Broadcom", ticker: "AVGO", sector: "Полупроводники", cap: "$1.1T", color: "#cc0000", letter: "B",
+    founder: "Генри Самуэли, Генри Николас", founded: 1991, hq: "Пало-Альто, США",
+    about: "Полупроводники, инфраструктурное ПО.", products: "Чипы для сетей, Wi-Fi, Bluetooth, VMware" },
+  { name: "Saudi Aramco", ticker: "2222.SR", sector: "Нефть и газ", cap: "$1.8T", color: "#00a651", letter: "S",
+    founder: "Правительство Саудовской Аравии", founded: 1933, hq: "Дахран, Саудовская Аравия",
+    about: "Крупнейшая нефтегазовая компания мира.", products: "Нефть, газ, нефтепродукты" },
+  { name: "TSMC", ticker: "TSM", sector: "Полупроводники", cap: "$1.0T", color: "#e60012", letter: "T",
+    founder: "Моррис Чанг", founded: 1987, hq: "Синьчжу, Тайвань",
+    about: "Крупнейший контрактный производитель чипов.", products: "Чипы для Apple, NVIDIA, AMD, Qualcomm" }
+];
+
+// РЕНДЕР КАРТОЧЕК КОМПАНИЙ
+function renderCompanies() {
+  const grid = document.getElementById('companies-grid');
+  if (!grid) return;
+  let html = '';
+  COMPANIES.forEach((c, i) => {
+    html += '<div class="company-card" data-index="' + i + '">' +
+      '<div class="company-logo" style="background:' + c.color + '">' + c.letter + '</div>' +
+      '<div class="company-name">' + c.name + '</div>' +
+      '<div class="company-ticker">' + c.ticker + '</div>' +
+      '<div class="company-sector">' + c.sector + '</div>' +
+      '<div class="company-cap">' + c.cap + '</div>' +
+    '</div>';
+  });
+  grid.innerHTML = html;
+}
+
+renderCompanies();renderEvents("");
 </script>
 </body>
 </html>
