@@ -738,7 +738,8 @@ document.querySelectorAll('.company-card').forEach(card => {
         '<div class="cp-row"><span class="cp-label">Штаб-квартира</span><span class="cp-value">' + c.hq + '</span></div>' +
       '</div>' +
       '<div class="cp-section"><div class="cp-section-title">О компании</div><div class="cp-about">' + c.about + '</div></div>' +
-      '<div class="cp-section"><div class="cp-section-title">Что производит</div><div class="cp-about">' + c.products + '</div></div>';
+      '<div class="cp-section"><div class="cp-section-title">Что производит</div><div class="cp-about">' + c.products + '</div></div>' +
+(c.reason ? '<div class="cp-section"><div class="cp-section-title">Причина краха</div><div class="cp-about">' + c.reason + '</div></div>' : '');
     
     document.querySelector('.header').style.display = 'none';
     document.querySelector('.search-bar').style.display = 'none';
