@@ -655,19 +655,31 @@ const COMPANIES = [
 
 // РЕНДЕР КАРТОЧЕК КОМПАНИЙ
 function renderCompanies() {
-  const grid = document.getElementById('companies-grid');
-  if (!grid) return;
-  let html = '';
+  const liveGrid = document.getElementById('companies-grid');
+  const defunctGrid = document.getElementById('defunct-grid');
+  if (!liveGrid || !defunctGrid) return;
+  
+  let liveHtml = '';
+  let defunctHtml = '';
+  
   COMPANIES.forEach((c, i) => {
-    html += '<div class="company-card" data-index="' + i + '">' +
+    const card = '<div class="company-card" data-index="' + i + '">' +
       '<div class="company-logo" style="background:' + c.color + '">' + c.letter + '</div>' +
       '<div class="company-name">' + c.name + '</div>' +
       '<div class="company-ticker">' + c.ticker + '</div>' +
       '<div class="company-sector">' + c.sector + '</div>' +
       '<div class="company-cap">' + c.cap + '</div>' +
     '</div>';
+    
+    if (c.defunct) {
+      defunctHtml += card;
+    } else {
+      liveHtml += card;
+    }
   });
-  grid.innerHTML = html;
+  
+  liveGrid.innerHTML = liveHtml;
+  defunctGrid.innerHTML = defunctHtml;
 }
 
 document.querySelectorAll('.company-card').forEach(card => {
