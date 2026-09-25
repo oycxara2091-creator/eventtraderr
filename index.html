@@ -223,10 +223,14 @@
   <button class="chart-period" data-year="2026">2026</button>
     </div>
   </div>
- <div class="companies-section">
+<div class="companies-section">
   <div class="section-title">Топ-компании мира</div>
   <div class="companies-grid" id="companies-grid"></div>
- </div>
+</div>
+<div class="companies-section">
+  <div class="section-title">Исчезнувшие компании и банки</div>
+  <div class="companies-grid" id="defunct-grid"></div>
+</div>
   <div class="count-bar" id="count-bar">Загрузка...</div>
   <div id="events-container"></div>
 </div>
@@ -596,6 +600,57 @@ const COMPANIES = [
 { name: "ASML", ticker: "ASML", sector: "Полупроводники", cap: "$350B", color: "#0d47a1", letter: "A",
   founder: "Philips", founded: 1984, hq: "Велдховен, Нидерланды",
   about: "Монополист на рынке фотолитографических машин для чипов.", products: "EUV-литография, оборудование для чипов" },
+
+{ name: "Lehman Brothers", ticker: "LEH", sector: "Инвестиционный банк", cap: "Банкрот", color: "#7f1d1d", letter: "L",
+  founder: "Генри Леман", founded: 1850, hq: "Нью-Йорк, США", defunct: true,
+  about: "Один из крупнейших инвестбанков США. 158 лет истории. Рухнул 15 сентября 2008 с активами 691 млрд долларов.",
+  products: "Инвестиционный банкинг, торговля ценными бумагами",
+  reason: "Ипотечный кризис. Обесценивание активов. Отказ в помощи от государства." },
+{ name: "Washington Mutual", ticker: "WM", sector: "Сберегательный банк", cap: "Банкрот", color: "#7f1d1d", letter: "W",
+  founder: "Джордж Парсонс", founded: 1889, hq: "Сиэтл, США", defunct: true,
+  about: "Крупнейшая сберегательная касса США. Активы 307 млрд долларов. 43 000 сотрудников. Продан JPMorgan за 1.9 млрд.",
+  products: "Розничный банкинг, ипотека",
+  reason: "Ипотечный кризис. Массовое изъятие вкладов. Продан JPMorgan." },
+{ name: "Enron", ticker: "ENE", sector: "Энергетика", cap: "Банкрот", color: "#7f1d1d", letter: "E",
+  founder: "Кеннет Лей", founded: 1985, hq: "Хьюстон, США", defunct: true,
+  about: "Крупнейший энерготрейдер. Активы 65.5 млрд долларов. Крупнейшая корпоративная афера. CEO получил 24 года тюрьмы.",
+  products: "Торговля электроэнергией и газом",
+  reason: "Бухгалтерская афера. Скрытые долги. Крах в декабре 2001." },
+{ name: "WorldCom", ticker: "WCOM", sector: "Телеком", cap: "Банкрот", color: "#7f1d1d", letter: "W",
+  founder: "Бернард Эбберс", founded: 1983, hq: "Клинтон, США", defunct: true,
+  about: "Второй оператор связи США. Крупнейшая интернет-сеть мира. Активы 104 млрд долларов. Афера на 11 млрд.",
+  products: "Междугородняя связь, интернет-услуги",
+  reason: "Бухгалтерская афера. Завышение прибыли на 11 млрд. Крах в июле 2002." },
+{ name: "Bear Stearns", ticker: "BSC", sector: "Инвестиционный банк", cap: "Продан", color: "#7f1d1d", letter: "B",
+  founder: "Джозеф Бэр", founded: 1923, hq: "Нью-Йорк, США", defunct: true,
+  about: "Пятый по величине инвестбанк США. 85 лет истории. Продан JPMorgan за 2 доллара за акцию в марте 2008.",
+  products: "Инвестиционный банкинг, ипотечные бумаги",
+  reason: "Ипотечный кризис. Потеря ликвидности. Экстренная продажа JPMorgan." },
+{ name: "Chrysler", ticker: "FCAU", sector: "Автопром", cap: "Поглощён", color: "#7f1d1d", letter: "C",
+  founder: "Уолтер Крайслер", founded: 1925, hq: "Оберн-Хиллс, США", defunct: true,
+  about: "Один из трёх крупнейших автопроизводителей США. Банкротство 2009 с активами 39.3 млрд. Продан Fiat.",
+  products: "Jeep, Dodge, Chrysler, Ram",
+  reason: "Кризис 2008. Банкротство. Продан Fiat. Позже стал частью Stellantis." },
+{ name: "Nortel Networks", ticker: "NT", sector: "Телеком", cap: "Банкрот", color: "#7f1d1d", letter: "N",
+  founder: "Bell Canada", founded: 1895, hq: "Оттава, Канада", defunct: true,
+  about: "Крупнейший телеком-производитель Канады. Стоимость 250 млрд на пике. Рухнул в 2009 после аферы.",
+  products: "Телеком-оборудование, сети",
+  reason: "Бухгалтерская афера. Кризис 2008. Банкротство в 2009." },
+{ name: "Saab", ticker: "SAAB", sector: "Автопром", cap: "Банкрот", color: "#7f1d1d", letter: "S",
+  founder: "Svenska Aeroplan", founded: 1945, hq: "Тролльхеттан, Швеция", defunct: true,
+  about: "Шведский автопроизводитель с авиационным прошлым. Погублен менеджментом GM. Банкротство 2011.",
+  products: "Автомобили Saab 900, 9000, 9-3, 9-5",
+  reason: "Плохой менеджмент GM. Кризис 2008. Банкротство в 2011." },
+{ name: "Oldsmobile", ticker: "—", sector: "Автопром", cap: "Закрыт", color: "#7f1d1d", letter: "O",
+  founder: "Рэнсом Олдс", founded: 1897, hq: "Лансинг, США", defunct: true,
+  about: "Старейший американский автобренд. 107 лет истории. Ликвидирован General Motors в 2004.",
+  products: "Oldsmobile Cutlass, 88, 98, Toronado",
+  reason: "Ликвидация GM. Падение продаж. Закрыт в 2004." },
+{ name: "Daewoo", ticker: "—", sector: "Автопром", cap: "Банкрот", color: "#7f1d1d", letter: "D",
+  founder: "Ким Ву Чун", founded: 1967, hq: "Инчхон, Южная Корея", defunct: true,
+  about: "Крупнейший конгломерат Кореи. Банкротство 1999 в азиатский кризис. Распродан по частям.",
+  products: "Автомобили, электроника, корабли",
+  reason: "Азиатский кризис 1997. Долги. Банкротство 1999." },
 ];
 
 // РЕНДЕР КАРТОЧЕК КОМПАНИЙ
