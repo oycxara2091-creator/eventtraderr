@@ -829,6 +829,21 @@ document.getElementById('back-btn').addEventListener('click', () => {
   document.querySelector('.container').style.display = '';
   window.scrollTo(0, 0);
 });
+// ПЕРЕКЛЮЧЕНИЕ ЭКРАНОВ
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    
+    const screenId = btn.getAttribute('data-screen');
+    const screen = document.getElementById(screenId);
+    if (screen) screen.classList.add('active');
+    
+    window.scrollTo(0, 0);
+  });
+});
 </script>
 </body>
 </html>
