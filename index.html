@@ -886,6 +886,106 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     window.scrollTo(0, 0);
   });
 });
+
+// ТЕПЛОВЫЕ КАРТЫ
+function capToNumber(capStr) {
+  // "5.0T" → 5.0, "350B" → 0.35, "Банкрот" → 0
+  if (!capStr || capStr === "Банкрот" || capStr === "Продан" || capStr === "Поглощён" || capStr === "Закрыт") return 0;
+  const num = parseFloat(capStr.replace('$', ''));
+  if (isNaN(num)) return 0;
+  if (capStr.includes('T')) return num;
+  if (capStr.includes('B')) return num / 1000;
+  return 0.001;
+}
+
+function getLiveColor(value) {
+  // Чем больше капитализация — тем темнее зелёный
+  if (value >= 4) return '#166534';
+  if (value >= 2) return '#15803d';
+  if (value >= 1) return '#22c55e';
+  if (value >= 0.5) return '#4ade80';
+  if (value >= 0.2) return '#86efac';
+  return '#bbf7d0';
+}
+
+function getDefunctColor(value) {
+  // Для исчезнувших — красная гамма
+  if (value >= 500) return '#7f1d1d';
+  if (value >= 100) return '#991b1b';
+  if (value >= 50) return '#b91c1c';
+  if (value >= 10) return '#dc2626';
+  return '#ef4444';
+}
+
+function renderHeatmap() {
+  const liveGrid = document.getElementById('heatmap-live');
+  const defunctGrid = document.getElementById('heatmap-defunct');
+  if (!liveGrid || !defunctGrid) return;
+  
+  let liveHtml = '';
+  let defunctHtml = '';
+  
+  COMPANIES.forEach((c, i) => {
+    let size, color;
+    
+    if (c.defunct) {
+      // Для исчезнувших — размер по фиксированной шкале (у них cap = "Банкрот")
+      size = 80; // фиксированный размер
+      color = getDefunctColor(200); // средний красный
+    } else {
+      const value = capToNumber(c.cap);
+      size = 60 + value * 40; // размер от 60 до 260
+      color = getLiveColor(value);
+    }
+    
+    const cell = '<div class="heat-cell" data-index="' + i + '" style="background:' + color + '; flex-grow:' + (c.defunct ? 1 : capToNumber(c.cap)) + '; min-width:' + (c.defunct ? 70 : 80) + 'px;">' +
+      '<div class="heat-cell-name">' + c.name + '</div>' +
+      '<div class="heat-cell-cap">' + c.cap + '</div>' +
+    '</div>';
+    
+    if (c.defunct) {
+      defunctHtml += cell;
+    } else {
+      liveHtml += cell;
+    }
+  });
+  
+  liveGrid.innerHTML = liveHtml;
+  defunctGrid.innerHTML = defunctHtml;
+  
+  // Клик на ячейку — открывает страницу компании
+  document.querySelectorAll('.heat-cell').forEach(cell => {
+    cell.addEventListener('click', () => {
+      const i = parseInt(cell.getAttribute('data-index'));
+      const c = COMPANIES[i];
+      if (!c) return;
+      
+      const content = document.getElementById('company-page-content');
+      content.innerHTML = 
+        '<div class="cp-logo" style="background:' + c.color + '">' + c.letter + '</div>' +
+        '<div class="cp-name">' + c.name + '</div>' +
+        '<div class="cp-ticker">' + c.ticker + ' • ' + c.sector + '</div>' +
+        '<div class="cp-section"><div class="cp-section-title">Характеристики</div>' +
+          '<div class="cp-row"><span class="cp-label">Капитализация</span><span class="cp-value">' + c.cap + '</span></div>' +
+          '<div class="cp-row"><span class="cp-label">Основатель</span><span class="cp-value">' + c.founder + '</span></div>' +
+          '<div class="cp-row"><span class="cp-label">Год основания</span><span class="cp-value">' + c.founded + '</span></div>' +
+          '<div class="cp-row"><span class="cp-label">Штаб-квартира</span><span class="cp-value">' + c.hq + '</span></div>' +
+        '</div>' +
+        '<div class="cp-section"><div class="cp-section-title">О компании</div><div class="cp-about">' + c.about + '</div></div>' +
+        '<div class="cp-section"><div class="cp-section-title">Что производит</div><div class="cp-about">' + c.products + '</div></div>' +
+        (c.reason ? '<div class="cp-section"><div class="cp-section-title">Причина краха</div><div class="cp-about">' + c.reason + '</div></div>' : '');
+      
+      document.querySelector('.header').style.display = 'none';
+      document.querySelector('.search-bar').style.display = 'none';
+      document.querySelectorAll('.screen').forEach(s => s.style.display = 'none');
+      document.querySelector('.tab-bar').style.display = 'none';
+      document.getElementById('company-page').style.display = 'block';
+      window.scrollTo(0, 0);
+    });
+  });
+}
+
+renderHeatmap();
 </script>
 </body>
 </html>
