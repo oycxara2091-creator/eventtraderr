@@ -190,7 +190,17 @@
 <div class="search-bar">
   <input type="text" id="search" placeholder="Поиск: год, страна, событие...">
 </div>
-<div class="container">
+<!-- ЭКРАН: ПРОФИЛЬ -->
+<div class="screen" id="screen-profile">
+  <div class="container">
+    <div class="section-title">Личный кабинет</div>
+    <div class="empty-msg">Здесь будет история ваших просмотров и избранное.</div>
+  </div>
+</div>
+
+<!-- ЭКРАН: РЫНОК -->
+<div class="screen active" id="screen-market">
+  <div class="container">
   <div class="chart-section">
     <div class="chart-header">
       <div>
@@ -231,8 +241,23 @@
   <div class="section-title">Исчезнувшие компании и банки</div>
   <div class="companies-grid" id="defunct-grid"></div>
 </div>
-  <div class="count-bar" id="count-bar">Загрузка...</div>
-  <div id="events-container"></div>
+  </div>
+</div>
+
+<!-- ЭКРАН: СОБЫТИЯ -->
+<div class="screen" id="screen-events">
+  <div class="container">
+    <div class="count-bar" id="count-bar">Загрузка...</div>
+    <div id="events-container"></div>
+  </div>
+</div>
+
+<!-- ЭКРАН: АНАЛИТИКА -->
+<div class="screen" id="screen-analytics">
+  <div class="container">
+    <div class="section-title">Аналитика</div>
+    <div class="empty-msg">Здесь будет аналитика рынка. Скоро.</div>
+  </div>
 </div>
 <div class="company-page" id="company-page" style="display:none;">
   <div class="company-page-header">
