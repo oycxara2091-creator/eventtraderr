@@ -210,6 +210,40 @@
 .tab-label { font-size: 10px; font-weight: 600; }
 .empty-msg { text-align: center; padding: 40px 16px; color: #5a6a80; font-size: 13px; }
   .footer { text-align: center; padding: 24px 16px; font-size: 11px; color: #4a5568; line-height: 1.6; }
+ .heatmap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 16px;
+}
+.heat-cell {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  border-radius: 6px;
+  padding: 8px 6px;
+  color: #fff;
+  text-align: center;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  min-height: 60px;
+  box-sizing: border-box;
+}
+.heat-cell:active {
+  opacity: 0.7;
+}
+.heat-cell-name {
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+.heat-cell-cap {
+  font-size: 9px;
+  margin-top: 3px;
+  opacity: 0.9;
+  font-weight: 600;
+}
 </style>
 </head>
 <body>
