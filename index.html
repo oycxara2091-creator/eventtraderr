@@ -868,7 +868,8 @@ document.getElementById('back-btn').addEventListener('click', () => {
   document.getElementById('company-page').style.display = 'none';
   document.querySelector('.header').style.display = '';
   document.querySelector('.search-bar').style.display = '';
-  document.querySelector('.container').style.display = '';
+  document.querySelector('.tab-bar').style.display = '';
+  document.querySelectorAll('.screen').forEach(s => s.style.display = '');
   window.scrollTo(0, 0);
 });
 // ПЕРЕКЛЮЧЕНИЕ ЭКРАНОВ
