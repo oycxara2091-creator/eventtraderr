@@ -257,8 +257,23 @@
 <!-- ЭКРАН: ПРОФИЛЬ -->
 <div class="screen" id="screen-profile">
   <div class="container">
-    <div class="section-title">Личный кабинет</div>
-    <div class="empty-msg">Здесь будет история ваших просмотров и избранное.</div>
+    <div class="section-title">Ваша активность</div>
+
+    <div class="history-block">
+      <div class="history-title">Недавние компании</div>
+      <div class="history-list" id="history-companies">
+        <div class="empty-msg">Пока пусто — откройте любую компанию.</div>
+      </div>
+    </div>
+
+    <div class="history-block">
+      <div class="history-title">Недавние события</div>
+      <div class="history-list" id="history-events">
+        <div class="empty-msg">Пока пусто — найдите событие в поиске.</div>
+      </div>
+    </div>
+
+    <button class="clear-history-btn" id="clear-history-btn">Очистить историю</button>
   </div>
 </div>
 
