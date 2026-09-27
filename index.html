@@ -1105,6 +1105,36 @@ document.getElementById('clear-history-btn').addEventListener('click', () => {
 
 // Первый рендер
 renderHistory();
+// === АВТОМАТИЧЕСКАЯ ЗАПИСЬ ИСТОРИИ ===
+
+// 1. Запись при клике на карточку компании
+document.querySelectorAll('.company-card').forEach(card => {
+  card.addEventListener('click', () => {
+    const i = parseInt(card.getAttribute('data-index'));
+    const c = COMPANIES[i];
+    if (c) addToHistory('companies', c.name);
+  });
+});
+
+// 2. Запись при клике на ячейку тепловой карты
+document.querySelectorAll('.heat-cell').forEach(cell => {
+  cell.addEventListener('click', () => {
+    const i = parseInt(cell.getAttribute('data-index'));
+    const c = COMPANIES[i];
+    if (c) addToHistory('companies', c.name);
+  });
+});
+
+// 3. Запись при поиске события
+let historySearchTimer = null;
+document.getElementById('search').addEventListener('input', (e) => {
+  clearTimeout(historySearchTimer);
+  const query = e.target.value.trim();
+  if (query.length < 3) return;
+  historySearchTimer = setTimeout(() => {
+    addToHistory('events', query);
+  }, 1000);
+});
 </script>
 </body>
 </html>
