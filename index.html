@@ -1050,6 +1050,61 @@ function renderHeatmap() {
 }
 
 renderHeatmap();
+// === ИСТОРИЯ ПРОСМОТРОВ ===
+
+const HISTORY_KEY = 'et_history';
+
+function getHistory() {
+  try {
+    return JSON.parse(localStorage.getItem(HISTORY_KEY)) || { companies: [], events: [] };
+  } catch (e) {
+    return { companies: [], events: [] };
+  }
+}
+
+function saveHistory(history) {
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+}
+
+function addToHistory(type, name) {
+  if (!name) return;
+  const history = getHistory();
+  // Убираем дубликат
+  history[type] = history[type].filter(item => item !== name);
+  // Добавляем в начало
+  history[type].unshift(name);
+  // Ограничиваем 10 записями
+  history[type] = history[type].slice(0, 10);
+  saveHistory(history);
+  renderHistory();
+}
+
+function renderHistory() {
+  const history = getHistory();
+  
+  const companiesEl = document.getElementById('history-companies');
+  const eventsEl = document.getElementById('history-events');
+  if (!companiesEl || !eventsEl) return;
+  
+  companiesEl.innerHTML = history.companies.length
+    ? history.companies.map(c => '<div class="history-item" data-type="company" data-name="' + c + '">' + c + '</div>').join('')
+    : '<div class="empty-msg">Пока пусто — откройте любую компанию.</div>';
+  
+  eventsEl.innerHTML = history.events.length
+    ? history.events.map(e => '<div class="history-item" data-type="event" data-name="' + e + '">' + e + '</div>').join('')
+    : '<div class="empty-msg">Пока пусто — найдите событие в поиске.</div>';
+}
+
+// Очистка истории
+document.getElementById('clear-history-btn').addEventListener('click', () => {
+  if (confirm('Очистить всю историю?')) {
+    localStorage.removeItem(HISTORY_KEY);
+    renderHistory();
+  }
+});
+
+// Первый рендер
+renderHistory();
 </script>
 </body>
 </html>
