@@ -1135,6 +1135,57 @@ document.getElementById('search').addEventListener('input', (e) => {
     addToHistory('events', query);
   }, 1000);
 });
+// === БУДУЩИЕ СОБЫТИЯ (2026–2030) ===
+const FUTURE_EVENTS = [
+  // 2026
+  { date: "2026-01-27", title: "Заседание ФРС", type: "fed", importance: "high" },
+  { date: "2026-02-01", title: "Встреча OPEC+", type: "opec", importance: "high" },
+  { date: "2026-03-17", title: "Заседание ФРС", type: "fed", importance: "high" },
+  { date: "2026-03-22", title: "Парламентские выборы в Словении", type: "election", importance: "medium" },
+  { date: "2026-04-28", title: "Заседание ФРС", type: "fed", importance: "high" },
+  { date: "2026-06-16", title: "Заседание ФРС", type: "fed", importance: "high" },
+  { date: "2026-06-01", title: "Встреча OPEC+", type: "opec", importance: "high" },
+  { date: "2026-07-28", title: "Заседание ФРС", type: "fed", importance: "high" },
+  { date: "2026-09-06", title: "Встреча OPEC+", type: "opec", importance: "high" },
+  { date: "2026-09-15", title: "Заседание ФРС", type: "fed", importance: "high" },
+  { date: "2026-09-20", title: "Парламентские выборы в России", type: "election", importance: "high" },
+  { date: "2026-09-13", title: "Парламентские выборы в Швеции", type: "election", importance: "medium" },
+  { date: "2026-10-27", title: "Заседание ФРС", type: "fed", importance: "high" },
+  { date: "2026-10-25", title: "Выборы в Аргентине", type: "election", importance: "medium" },
+  { date: "2026-11-03", title: "Президентские выборы в Бразилии", type: "election", importance: "high" },
+  { date: "2026-11-01", title: "Встреча OPEC+", type: "opec", importance: "high" },
+  { date: "2026-12-08", title: "Заседание ФРС", type: "fed", importance: "high" },
+
+  // 2027
+  { date: "2027-01-26", title: "Заседание ФРС", type: "fed", importance: "high" },
+  { date: "2027-03-16", title: "Заседание ФРС", type: "fed", importance: "high" },
+  { date: "2027-04-27", title: "Заседание ФРС", type: "fed", importance: "high" },
+  { date: "2027-06-08", title: "Заседание ФРС", type: "fed", importance: "high" },
+  { date: "2027-06-13", title: "Парламентские выборы в Черногории", type: "election", importance: "low" },
+  { date: "2027-07-27", title: "Заседание ФРС", type: "fed", importance: "high" },
+  { date: "2027-07-18", title: "Парламентские выборы в Испании", type: "election", importance: "medium" },
+  { date: "2027-09-14", title: "Заседание ФРС", type: "fed", importance: "high" },
+  { date: "2027-10-26", title: "Заседание ФРС", type: "fed", importance: "high" },
+  { date: "2027-10-15", title: "Парламентские выборы в Польше", type: "election", importance: "medium" },
+  { date: "2027-12-07", title: "Заседание ФРС", type: "fed", importance: "high" },
+  { date: "2027-12-20", title: "Парламентские выборы в Сербии", type: "election", importance: "low" },
+
+  // 2028
+  { date: "2028-07-14", title: "Летние Олимпийские игры (Лос-Анджелес)", type: "sport", importance: "high" },
+  { date: "2028-11-07", title: "Президентские выборы в США", type: "election", importance: "high" },
+  { date: "2028-06-01", title: "Президентские выборы в Мексике", type: "election", importance: "high" },
+  { date: "2028-12-01", title: "Парламентские выборы в Румынии", type: "election", importance: "medium" },
+
+  // 2029
+  { date: "2029-04-13", title: "Сближение астероида Апофис с Землёй", type: "space", importance: "high" },
+  { date: "2029-06-06", title: "Выборы в Европарламент", type: "election", importance: "high" },
+  { date: "2029-05-15", title: "Парламентские выборы в Португалии", type: "election", importance: "medium" },
+
+  // 2030
+  { date: "2030-02-01", title: "Зимние Олимпийские игры (Франция)", type: "sport", importance: "high" },
+  { date: "2030-06-08", title: "Чемпионат мира по футболу", type: "sport", importance: "high" },
+  { date: "2030-03-15", title: "Президентские выборы в России", type: "election", importance: "high" }
+];
 </script>
 </body>
 </html>
