@@ -257,6 +257,55 @@
 .clear-history-btn:active {
   background: #991b1b;
 }
+ .future-events {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.future-year {
+  background: #111827;
+  border: 1px solid #1f2a3a;
+  border-radius: 12px;
+  padding: 14px;
+}
+.future-year-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #60a5fa;
+  margin-bottom: 10px;
+}
+.future-event {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid #1f2a3a;
+}
+.future-event:last-child {
+  border-bottom: none;
+}
+.future-date {
+  font-size: 11px;
+  color: #7d8da6;
+  min-width: 50px;
+  padding-top: 2px;
+}
+.future-title {
+  font-size: 13px;
+  color: #e6edf3;
+  flex: 1;
+}
+.future-importance {
+  font-size: 9px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+.imp-high { background: #7f1d1d; color: #fca5a5; }
+.imp-medium { background: #78350f; color: #fcd34d; }
+.imp-low { background: #14532d; color: #86efac; }
  .footer { text-align: center; padding: 24px 16px; font-size: 11px; color: #4a5568; line-height: 1.6; }
  .heatmap {
   display: flex;
@@ -1190,6 +1239,53 @@ const FUTURE_EVENTS = [
   { date: "2030-06-08", title: "Чемпионат мира по футболу", type: "sport", importance: "high" },
   { date: "2030-03-15", title: "Президентские выборы в России", type: "election", importance: "high" }
 ];
+// === РЕНДЕР БУДУЩИХ СОБЫТИЙ ===
+function renderFutureEvents() {
+  const container = document.getElementById('future-events');
+  if (!container) return;
+  
+  // Группируем по годам
+  const byYear = {};
+  FUTURE_EVENTS.forEach(ev => {
+    const year = ev.date.substring(0, 4);
+    if (!byYear[year]) byYear[year] = [];
+    byYear[year].push(ev);
+  });
+  
+  // Сортируем годы
+  const years = Object.keys(byYear).sort();
+  
+  let html = '';
+  years.forEach(year => {
+    // Сортируем события внутри года по дате
+    const events = byYear[year].sort((a, b) => a.date.localeCompare(b.date));
+    
+    html += '<div class="future-year">';
+    html += '<div class="future-year-title">' + year + '</div>';
+    
+    events.forEach(ev => {
+      const dateParts = ev.date.split('-');
+      const dayMonth = dateParts[2] + '.' + dateParts[1];
+      
+      const impClass = ev.importance === 'high' ? 'imp-high' : 
+                       ev.importance === 'medium' ? 'imp-medium' : 'imp-low';
+      const impLabel = ev.importance === 'high' ? 'Высокая' : 
+                       ev.importance === 'medium' ? 'Средняя' : 'Низкая';
+      
+      html += '<div class="future-event">';
+      html += '<span class="future-date">' + dayMonth + '</span>';
+      html += '<span class="future-title">' + ev.title + '</span>';
+      html += '<span class="future-importance ' + impClass + '">' + impLabel + '</span>';
+      html += '</div>';
+    });
+    
+    html += '</div>';
+  });
+  
+  container.innerHTML = html;
+}
+
+renderFutureEvents();
 </script>
 </body>
 </html>
