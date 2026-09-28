@@ -479,7 +479,13 @@
     <div class="empty-msg">Здесь будет аналитика рынка. Скоро.</div>
   </div>
 </div>
-<div class="company-page" id="company-page" style="display:none;">
+<div class="company-page" id="asset-page" style="display:none;">
+  <div class="company-page-header">
+    <button class="back-btn" id="asset-back-btn">← Назад</button>
+  </div>
+  <div class="company-page-content" id="asset-page-content"></div>
+</div>
+ <div class="company-page" id="company-page" style="display:none;">
   <div class="company-page-header">
     <button class="back-btn" id="back-btn">← Назад</button>
   </div>
@@ -1318,6 +1324,166 @@ function renderFutureEvents() {
 }
 
 renderFutureEvents();
+// === АКТИВЫ (золото, серебро, нефть, газ) ===
+const ASSETS_DATA = {
+  gold: {
+    name: "Золото (XAU/USD)",
+    unit: "USD за унцию",
+    icon: "🥇",
+    yearly: [
+      { year: 2016, price: 1249 }, { year: 2017, price: 1258 }, { year: 2018, price: 1269 },
+      { year: 2019, price: 1393 }, { year: 2020, price: 1770 }, { year: 2021, price: 1800 },
+      { year: 2022, price: 1801 }, { year: 2023, price: 1943 }, { year: 2024, price: 2388 },
+      { year: 2025, price: 3442 }, { year: 2026, price: 4886 }
+    ],
+    monthly: {
+      2016: [1100,1150,1200,1250,1280,1320,1350,1340,1330,1270,1250,1150],
+      2017: [1150,1200,1230,1250,1270,1290,1300,1280,1290,1280,1270,1250],
+      2018: [1250,1270,1290,1310,1300,1290,1270,1250,1230,1240,1260,1280],
+      2019: [1280,1300,1320,1350,1380,1420,1450,1480,1500,1520,1550,1580],
+      2020: [1580,1650,1700,1750,1780,1800,1820,1850,1880,1900,1920,1950],
+      2021: [1950,1920,1880,1850,1820,1800,1780,1750,1720,1700,1680,1650],
+      2022: [1650,1680,1720,1780,1850,1900,1920,1880,1820,1750,1700,1720],
+      2023: [1720,1750,1800,1850,1900,1950,1980,2000,2020,2050,2080,2100],
+      2024: [2100,2150,2200,2250,2300,2350,2400,2450,2500,2550,2600,2650],
+      2025: [2700,2850,2950,3100,3300,3500,3600,3700,3800,4000,4200,4300],
+      2026: [4750,5020,4855,4721,4587,4228,4073,4110,4150,4200,4250,4300]
+    }
+  },
+  silver: {
+    name: "Серебро (XAG/USD)",
+    unit: "USD за унцию",
+    icon: "🥈",
+    yearly: [
+      { year: 2016, price: 17.2 }, { year: 2017, price: 17.0 }, { year: 2018, price: 15.7 },
+      { year: 2019, price: 16.2 }, { year: 2020, price: 20.5 }, { year: 2021, price: 25.2 },
+      { year: 2022, price: 21.8 }, { year: 2023, price: 23.4 }, { year: 2024, price: 28.5 },
+      { year: 2025, price: 35.0 }, { year: 2026, price: 48.0 }
+    ],
+    monthly: null
+  },
+  oil: {
+    name: "Нефть Brent",
+    unit: "USD за баррель",
+    icon: "🛢️",
+    yearly: [
+      { year: 2016, price: 44 }, { year: 2017, price: 54 }, { year: 2018, price: 71 },
+      { year: 2019, price: 64 }, { year: 2020, price: 42 }, { year: 2021, price: 71 },
+      { year: 2022, price: 99 }, { year: 2023, price: 82 }, { year: 2024, price: 80 },
+      { year: 2025, price: 75 }, { year: 2026, price: 70 }
+    ],
+    monthly: null
+  },
+  gas: {
+    name: "Природный газ",
+    unit: "USD за MMBtu",
+    icon: "🔥",
+    yearly: [
+      { year: 2016, price: 2.5 }, { year: 2017, price: 3.0 }, { year: 2018, price: 3.2 },
+      { year: 2019, price: 2.6 }, { year: 2020, price: 2.0 }, { year: 2021, price: 3.9 },
+      { year: 2022, price: 6.4 }, { year: 2023, price: 2.5 }, { year: 2024, price: 2.2 },
+      { year: 2025, price: 3.0 }, { year: 2026, price: 3.5 }
+    ],
+    monthly: null
+  }
+};
+
+let currentAsset = null;
+
+function drawAssetChart(prices) {
+  const line = document.getElementById('asset-line');
+  if (!line) return;
+  const min = Math.min(...prices);
+  const max = Math.max(...prices);
+  const range = max - min || 1;
+  const points = prices.map((price, i) => {
+    const x = (i / (prices.length - 1)) * 300;
+    const y = 100 - ((price - min) / range) * 80 - 10;
+    return x + ',' + y;
+  }).join(' ');
+  line.setAttribute('points', points);
+  const trend = prices[prices.length - 1] - prices[0];
+  line.setAttribute('stroke', trend > 0 ? '#4ade80' : '#f87171');
+}
+
+function showAsset(key) {
+  const a = ASSETS_DATA[key];
+  if (!a) return;
+  currentAsset = key;
+  
+  const current = a.yearly[a.yearly.length - 1].price;
+  const first = a.yearly[0].price;
+  const change = ((current - first) / first * 100).toFixed(0);
+  
+  const content = document.getElementById('asset-page-content');
+  content.innerHTML =
+    '<div class="cp-logo" style="background:#1e3a5f">' + a.icon + '</div>' +
+    '<div class="cp-name">' + a.name + '</div>' +
+    '<div class="cp-ticker">' + a.unit + '</div>' +
+    '<div class="chart-section" style="margin-top:16px;">' +
+      '<div class="chart-header">' +
+        '<div>' +
+          '<div class="chart-title">Динамика цены</div>' +
+          '<div class="chart-subtitle">Средняя цена за год, 2016–2026</div>' +
+        '</div>' +
+        '<div>' +
+          '<div class="chart-price">$' + current + '</div>' +
+          '<div class="chart-change up">+' + change + '% за 10 лет</div>' +
+        '</div>' +
+      '</div>' +
+      '<svg class="chart-svg" id="asset-chart" viewBox="0 0 300 100" preserveAspectRatio="none">' +
+        '<line x1="0" y1="25" x2="300" y2="25" stroke="#1f2a3a" stroke-width="0.5"/>' +
+        '<line x1="0" y1="50" x2="300" y2="50" stroke="#1f2a3a" stroke-width="0.5"/>' +
+        '<line x1="0" y1="75" x2="300" y2="75" stroke="#1f2a3a" stroke-width="0.5"/>' +
+        '<polyline id="asset-line" fill="none" stroke="#4ade80" stroke-width="2" points=""/>' +
+      '</svg>' +
+      '<div class="chart-periods" id="asset-year-buttons">' +
+        '<button class="chart-period active" data-year="all">Все</button>' +
+        a.yearly.map(y => '<button class="chart-period" data-year="' + y.year + '">' + y.year + '</button>').join('') +
+      '</div>' +
+    '</div>';
+  
+  document.querySelector('.header').style.display = 'none';
+  document.querySelector('.search-bar').style.display = 'none';
+  document.querySelectorAll('.screen').forEach(s => s.style.display = 'none');
+  document.querySelector('.tab-bar').style.display = 'none';
+  document.getElementById('asset-page').style.display = 'block';
+  window.scrollTo(0, 0);
+  
+  drawAssetChart(a.yearly.map(y => y.price));
+  
+  document.querySelectorAll('#asset-year-buttons .chart-period').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#asset-year-buttons .chart-period').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const year = btn.getAttribute('data-year');
+      if (year === 'all') {
+        drawAssetChart(a.yearly.map(y => y.price));
+      } else if (a.monthly && a.monthly[year]) {
+        drawAssetChart(a.monthly[year]);
+      } else {
+        const point = a.yearly.find(y => y.year == year);
+        if (point) drawAssetChart([point.price, point.price]);
+      }
+    });
+  });
+}
+
+document.querySelectorAll('.asset-card').forEach(card => {
+  card.addEventListener('click', () => {
+    const key = card.getAttribute('data-asset');
+    if (key) showAsset(key);
+  });
+});
+
+document.getElementById('asset-back-btn').addEventListener('click', () => {
+  document.getElementById('asset-page').style.display = 'none';
+  document.querySelector('.header').style.display = '';
+  document.querySelector('.search-bar').style.display = '';
+  document.querySelector('.tab-bar').style.display = '';
+  document.querySelectorAll('.screen').forEach(s => s.style.display = '');
+  window.scrollTo(0, 0);
+});
 </script>
 </body>
 </html>
