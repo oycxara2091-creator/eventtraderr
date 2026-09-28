@@ -1373,28 +1373,27 @@ function renderHeatmap() {
   
   let liveHtml = '';
   let defunctHtml = '';
+  let liveCount = 0;
+  let defunctCount = 0;
   
   COMPANIES.forEach((c, i) => {
-    let size, color;
-    
     if (c.defunct) {
-      // Для исчезнувших — размер по фиксированной шкале (у них cap = "Банкрот")
-      size = 80; // фиксированный размер
-      color = getDefunctColor(200); // средний красный
-    } else {
-      const value = capToNumber(c.cap);
-      size = 60 + value * 40; // размер от 60 до 260
-      color = getLiveColor(value);
-    }
-    
-    const cell = '<div class="heat-cell" data-index="' + i + '" style="background:' + color + '; flex-grow:' + (c.defunct ? 1 : capToNumber(c.cap)) + '; min-width:' + (c.defunct ? 70 : 80) + 'px;">' +
-      '<div class="heat-cell-name">' + c.name + '</div>' +
-      '<div class="heat-cell-cap">' + c.cap + '</div>' +
-    '</div>';
-    
-    if (c.defunct) {
+      if (defunctCount >= 10) return;
+      defunctCount++;
+      const cell = '<div class="heat-cell" data-index="' + i + '" style="background:#7f1d1d; flex-grow:1; min-width:70px;">' +
+        '<div class="heat-cell-name">' + c.name + '</div>' +
+        '<div class="heat-cell-cap">' + c.cap + '</div>' +
+      '</div>';
       defunctHtml += cell;
     } else {
+      if (liveCount >= 10) return;
+      liveCount++;
+      const value = capToNumber(c.cap);
+      const color = getLiveColor(value);
+      const cell = '<div class="heat-cell" data-index="' + i + '" style="background:' + color + '; flex-grow:' + value + '; min-width:80px;">' +
+        '<div class="heat-cell-name">' + c.name + '</div>' +
+        '<div class="heat-cell-cap">' + c.cap + '</div>' +
+      '</div>';
       liveHtml += cell;
     }
   });
@@ -1402,12 +1401,12 @@ function renderHeatmap() {
   liveGrid.innerHTML = liveHtml;
   defunctGrid.innerHTML = defunctHtml;
   
-  // Клик на ячейку — открывает страницу компании
   document.querySelectorAll('.heat-cell').forEach(cell => {
     cell.addEventListener('click', () => {
       const i = parseInt(cell.getAttribute('data-index'));
       const c = COMPANIES[i];
       if (!c) return;
+      addToHistory('companies', c.name);
       
       const content = document.getElementById('company-page-content');
       content.innerHTML = 
