@@ -377,38 +377,32 @@
 <!-- ЭКРАН: РЫНОК -->
 <div class="screen active" id="screen-market">
   <div class="container">
-  <div class="chart-section">
-    <div class="chart-header">
-      <div>
-        <div class="chart-title">Золото (XAU/USD)</div>
-        <div class="chart-subtitle">Средняя цена за год, 2016–2026</div>
-      </div>
-      <div>
-        <div class="chart-price">$4,886</div>
-        <div class="chart-change up">+163% за 10 лет</div>
-      </div>
-    </div>
-    <svg class="chart-svg" id="gold-chart" viewBox="0 0 300 100" preserveAspectRatio="none">
-      <line x1="0" y1="25" x2="300" y2="25" stroke="#1f2a3a" stroke-width="0.5"/>
-      <line x1="0" y1="50" x2="300" y2="50" stroke="#1f2a3a" stroke-width="0.5"/>
-      <line x1="0" y1="75" x2="300" y2="75" stroke="#1f2a3a" stroke-width="0.5"/>
-      <polyline id="gold-line" fill="none" stroke="#4ade80" stroke-width="2" points=""/>
-    </svg>
-    <div class="chart-periods" id="year-buttons">
-  <button class="chart-period active" data-year="all">Все</button>
-  <button class="chart-period" data-year="2016">2016</button>
-  <button class="chart-period" data-year="2017">2017</button>
-  <button class="chart-period" data-year="2018">2018</button>
-  <button class="chart-period" data-year="2019">2019</button>
-  <button class="chart-period" data-year="2020">2020</button>
-  <button class="chart-period" data-year="2021">2021</button>
-  <button class="chart-period" data-year="2022">2022</button>
-  <button class="chart-period" data-year="2023">2023</button>
-  <button class="chart-period" data-year="2024">2024</button>
-  <button class="chart-period" data-year="2025">2025</button>
-  <button class="chart-period" data-year="2026">2026</button>
-    </div>
+<div class="assets-grid" id="assets-grid">
+  <div class="asset-card" data-asset="gold">
+    <div class="asset-icon">🥇</div>
+    <div class="asset-name">Золото</div>
+    <div class="asset-price">$4,886</div>
+    <div class="asset-change up">+163%</div>
   </div>
+  <div class="asset-card" data-asset="silver">
+    <div class="asset-icon">🥈</div>
+    <div class="asset-name">Серебро</div>
+    <div class="asset-price">$48.0</div>
+    <div class="asset-change up">+179%</div>
+  </div>
+  <div class="asset-card" data-asset="oil">
+    <div class="asset-icon">🛢️</div>
+    <div class="asset-name">Нефть Brent</div>
+    <div class="asset-price">$70</div>
+    <div class="asset-change up">+59%</div>
+  </div>
+  <div class="asset-card" data-asset="gas">
+    <div class="asset-icon">🔥</div>
+    <div class="asset-name">Природный газ</div>
+    <div class="asset-price">$3.5</div>
+    <div class="asset-change up">+40%</div>
+  </div>
+</div>
 <div class="companies-section">
   <div class="section-title">Тепловая карта — Топ-компании</div>
   <div class="heatmap" id="heatmap-live"></div>
