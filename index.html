@@ -344,6 +344,71 @@
 }
 .asset-change.up { color: #4ade80; }
 .asset-change.down { color: #f87171; }
+ .companies-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 16px;
+}
+.company-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 4px;
+  border-bottom: 1px solid #1f2a3a;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.company-row:active {
+  background: #0d1420;
+}
+.company-row:last-child {
+  border-bottom: none;
+}
+.company-row-logo {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+}
+.company-row-info {
+  flex: 1;
+  min-width: 0;
+}
+.company-row-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #e6edf3;
+  margin-bottom: 2px;
+}
+.company-row-ticker {
+  font-size: 11px;
+  color: #5a6a80;
+}
+.company-row-price {
+  text-align: right;
+  flex-shrink: 0;
+}
+.company-row-cap {
+  font-size: 14px;
+  font-weight: 700;
+  color: #e6edf3;
+  margin-bottom: 2px;
+}
+.company-row-change {
+  font-size: 11px;
+  font-weight: 600;
+  color: #4ade80;
+}
+.company-row-change.down {
+  color: #f87171;
+}
  .footer { text-align: center; padding: 24px 16px; font-size: 11px; color: #4a5568; line-height: 1.6; }
  .heatmap {
   display: flex;
