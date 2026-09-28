@@ -306,6 +306,44 @@
 .imp-high { background: #7f1d1d; color: #fca5a5; }
 .imp-medium { background: #78350f; color: #fcd34d; }
 .imp-low { background: #14532d; color: #86efac; }
+ .assets-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.asset-card {
+  background: #111827;
+  border: 1px solid #1f2a3a;
+  border-radius: 12px;
+  padding: 14px;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+.asset-card:active {
+  border-color: #4ade80;
+}
+.asset-icon {
+  font-size: 24px;
+  margin-bottom: 6px;
+}
+.asset-name {
+  font-size: 12px;
+  color: #7d8da6;
+  margin-bottom: 6px;
+}
+.asset-price {
+  font-size: 18px;
+  font-weight: 700;
+  color: #e6edf3;
+  margin-bottom: 2px;
+}
+.asset-change {
+  font-size: 11px;
+  font-weight: 600;
+}
+.asset-change.up { color: #4ade80; }
+.asset-change.down { color: #f87171; }
  .footer { text-align: center; padding: 24px 16px; font-size: 11px; color: #4a5568; line-height: 1.6; }
  .heatmap {
   display: flex;
