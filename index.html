@@ -989,31 +989,35 @@ const COMPANIES = [
 
 // РЕНДЕР КАРТОЧЕК КОМПАНИЙ
 function renderCompanies() {
-  const liveGrid = document.getElementById('companies-grid');
-  const defunctGrid = document.getElementById('defunct-grid');
-  if (!liveGrid || !defunctGrid) return;
+  const liveList = document.getElementById('companies-list');
+  const defunctList = document.getElementById('defunct-list');
+  if (!liveList || !defunctList) return;
   
   let liveHtml = '';
   let defunctHtml = '';
   
   COMPANIES.forEach((c, i) => {
-    const card = '<div class="company-card" data-index="' + i + '">' +
-      '<div class="company-logo" style="background:' + c.color + '">' + c.letter + '</div>' +
-      '<div class="company-name">' + c.name + '</div>' +
-      '<div class="company-ticker">' + c.ticker + '</div>' +
-      '<div class="company-sector">' + c.sector + '</div>' +
-      '<div class="company-cap">' + c.cap + '</div>' +
+    const row = '<div class="company-row" data-index="' + i + '">' +
+      '<div class="company-row-logo" style="background:' + c.color + '">' + c.letter + '</div>' +
+      '<div class="company-row-info">' +
+        '<div class="company-row-name">' + c.name + '</div>' +
+        '<div class="company-row-ticker">' + c.ticker + ' • ' + c.sector + '</div>' +
+      '</div>' +
+      '<div class="company-row-price">' +
+        '<div class="company-row-cap">' + c.cap + '</div>' +
+        '<div class="company-row-change">' + (c.defunct ? 'Банкрот' : 'Активна') + '</div>' +
+      '</div>' +
     '</div>';
     
     if (c.defunct) {
-      defunctHtml += card;
+      defunctHtml += row;
     } else {
-      liveHtml += card;
+      liveHtml += row;
     }
   });
   
-  liveGrid.innerHTML = liveHtml;
-  defunctGrid.innerHTML = defunctHtml;
+  liveList.innerHTML = liveHtml;
+  defunctList.innerHTML = defunctHtml;
 }
 
 document.querySelectorAll('.company-card').forEach(card => {
